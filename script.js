@@ -8,7 +8,6 @@ const startBtn = document.getElementById('start-btn');
 const attackBtn = document.getElementById('attack-btn');
 const explosion = document.getElementById('explosion');
 
-// リザルト・設定用要素
 const resultContainer = document.getElementById('result-container');
 const resScore = document.getElementById('res-score');
 const resHiScore = document.getElementById('res-hi-score');
@@ -24,7 +23,6 @@ let isInvincible = false;
 let animationFrameId;
 let spawnTimeoutId;
 
-// プレイヤー物理パラメータ
 let playerY = 0;
 let velocityY = 0;
 const gravity = 0.36;
@@ -32,16 +30,19 @@ const firstJumpPower = 7.6;
 const secondJumpPower = 8.2; 
 let jumpCount = 0;
 
-// ゲーム状態データ
 let obstacles = [];
 let elecBalls = [];
 let gameSpeed = 3.5;
 
-// ⚙️ 起動時にハイスコアとボタン位置設定をロード
 window.addEventListener('DOMContentLoaded', () => {
-    hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
+    try {
+        hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
+    } catch(e) { hiScore = 0; }
     
-    const savedPos = localStorage.getItem('marumine_btn_pos') || 'right';
+    let savedPos = 'right';
+    try {
+        savedPos = localStorage.getItem('marumine_btn_pos') || 'right';
+    } catch(e) {}
     applyButtonPosition(savedPos);
 });
 
@@ -55,7 +56,9 @@ function applyButtonPosition(position) {
         btnSetRight.classList.add('active');
         btnSetLeft.classList.remove('active');
     }
-    localStorage.setItem('marumine_btn_pos', position);
+    try {
+        localStorage.setItem('marumine_btn_pos', position);
+    } catch(e) {}
 }
 
 btnSetLeft.addEventListener('click', () => applyButtonPosition('left'));
@@ -192,7 +195,6 @@ function createObstacleElement(xPos, cssClass, isDestructible, patternId) {
 function gameLoop() {
     if (!isPlaying) return;
 
-    // --- 1. プレイヤーの物理演算 ---
     velocityY -= gravity;
     playerY += velocityY;
 
@@ -203,10 +205,8 @@ function gameLoop() {
     }
     player.style.bottom = playerY + 'px';
 
-    // スピードアップ判定に使うため、現在のスコアを退避
     const oldScore = score;
 
-    // --- 2. エレキボールの移動と判定 ---
     for (let j = elecBalls.length - 1; j >= 0; j--) {
         const ball = elecBalls[j];
         ball.x += 8;
@@ -225,7 +225,6 @@ function gameLoop() {
             }
         }
 
-        // 紫の壁ならグループ丸ごと一括破壊
         if (targetPatternId !== null) {
             let destroyedCount = 0;
             for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -235,7 +234,6 @@ function gameLoop() {
                     destroyedCount++;
                 }
             }
-            // 🎯【修正】紫の壁を破壊した瞬間に、通過時と同じ「10点」を直接加算する
             if (destroyedCount > 0) {
                 score += 10;
                 scoreDisplay.textContent = score;
@@ -248,7 +246,6 @@ function gameLoop() {
         }
     }
 
-    // --- 3. 障害物の移動とプレイヤー判定 ---
     let scoredPatternIds = [];
 
     for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -273,7 +270,6 @@ function gameLoop() {
         }
     }
 
-    // 🎯【修正】ボール破壊・通常通過どちらの加算でも50点ごとのスピードアップが発動するように統合
     if (score > 0 && oldScore !== score && score % 50 === 0 && gameSpeed < 8) {
         gameSpeed += 0.4;
         player.style.animationDuration = (3.5 / gameSpeed * 0.9) + 's';
@@ -338,7 +334,9 @@ function gameOver() {
 
     if (score > hiScore) {
         hiScore = score;
-        localStorage.setItem('marumine_hiscore', hiScore);
+        try {
+            localStorage.setItem('marumine_hiscore', hiScore);
+        } catch(e) {}
     }
 
     player.classList.remove('rolling', 'invincible');
