@@ -3,47 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>マルマインのゴロゴロ大作戦 EX</title>
+    <title>マルマインのゴロゴロ大作戦</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- 縦向きの時の警告 -->
     <div id="orientation-warning">
         🔄 スマホを横向きにしてプレイしてください
     </div>
 
-    <!-- ゲーム全体の容器 -->
     <div id="game-container">
         <!-- UI表示エリア -->
         <div id="hud-container">
-            <div id="score-container">SCORE: <span id="score">0</span></div>
-            <div id="life-container">LIFE: <span id="life">❤️❤️❤️</span></div>
+            <div id="score-wrap">
+                <div id="score-container">SCORE: <span id="score">0</span></div>
+                <!-- 📊【新規】ゲーム中も現在のスコアの下にハイスコアを表示 -->
+                <div id="hud-hi-score-container">HI-SCORE: <span id="hud-hi-score">0</span></div>
+            </div>
+            
+            <div id="life-container">
+                <!-- ⏸️【新規】ゲーム中の一時停止ボタン -->
+                <button id="pause-btn">⏸️</button>
+                LIFE: <span id="life">❤️❤️❤️</span>
+            </div>
         </div>
         
-        <!-- ゲームステージ -->
+        <!-- ゲーム画面 -->
         <div id="game-stage">
             <div id="player"></div>
             <div id="explosion">💥</div>
         </div>
 
-        <!-- エレキボール発射ボタン -->
-        <button id="attack-btn" class="pos-top-right">⚡️ ATTACK</button>
+        <!-- ⚡️【テキスト変更】アタックから「エレキボール」に表記を変更 -->
+        <button id="attack-btn" class="pos-top-right">エレキボール</button>
 
-        <!-- メインメニュー ＆ ゲームオーバー画面 -->
+        <!-- 📖【新規】遊び方説明のポップアップ（初期状態は非表示） -->
+        <div id="how-to-modal">
+            <div class="modal-content">
+                <h2>📖 遊び方説明</h2>
+                <div class="how-to-text">
+                    <p><strong>【画面の左（または右）をタップ】</strong><br>通常ジャンプ / 空中でさらにもう一回タップで2段ジャンプ！</p>
+                    <p><strong>【「エレキボール」ボタンをタップ】</strong><br>上・中・下すべてが塞がった紫の壁を、一撃で吹き飛ばすぞ！</p>
+                </div>
+                <button id="how-to-close-btn">閉じる</button>
+            </div>
+        </div>
+
+        <!-- メインメニュー ＆ ゲームオーバー画面（オーバーレイ） -->
         <div id="overlay">
-            <h1 id="game-title">MARUMINE ROLL EX</h1>
+            <!-- ✏️【変更】タイトルを「マルマインのゴロゴロ大作戦」に日本語化 -->
+            <h1 id="game-title">マルマインのゴロゴロ大作戦</h1>
             
-            <div id="result-container" style="display: none;">
-                <p>YOUR SCORE: <span id="res-score">0</span></p>
-                <p>HI-SCORE: <span id="res-hi-score">0</span></p>
+            <!-- 📊 トップ画面にもハイスコアを表示する枠 -->
+            <div id="result-container">
+                <p id="top-hi-score-wrap">HI-SCORE: <span id="res-hi-score">0</span></p>
+                <div id="gameover-scores" style="display: none;">
+                    <p>YOUR SCORE: <span id="res-score">0</span></p>
+                </div>
             </div>
 
+            <!-- トップ画面の設定欄 -->
             <div id="menu-settings">
-                <p>【 攻撃ボタンの位置設定 】</p>
+                <p>【 ボタンの位置設定 】</p>
                 <div class="setting-row">
                     <button id="btn-set-left">左上</button>
                     <button id="btn-set-right" class="active">右上</button>
                 </div>
+                <!-- 📖【新規】トップ画面専用の遊び方ボタン -->
+                <button id="how-to-open-btn">📖 遊び方</button>
             </div>
 
             <button id="start-btn">START</button>
