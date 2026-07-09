@@ -1,1 +1,230 @@
 
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #111;
+    color: #fff;
+    font-family: sans-serif;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#orientation-warning {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #222;
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+@media (orientation: landscape) {
+    #orientation-warning { display: none; }
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(#1a2a6c, #b21f1f, #fdbb2d);
+}
+
+#hud-container {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 24px;
+    font-weight: bold;
+    z-index: 15;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+}
+
+#life-container {
+    color: #ff3366;
+}
+
+#game-stage {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border-bottom: 20px solid #333;
+}
+
+/* 👾【修正】マルマインの位置を 10% → 22% へ前に移動（ボタンとの被りを解消） */
+#player {
+    width: 50px;
+    height: 50px;
+    background-image: url('marumine.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    position: absolute;
+    bottom: 0;
+    left: 22%;
+    z-index: 5;
+}
+
+.rolling {
+    animation: roll 0.8s linear infinite;
+}
+
+@keyframes roll {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.obstacle {
+    width: 30px;
+    height: 40px;
+    background-color: #ff3366;
+    border-radius: 4px;
+    position: absolute;
+    left: 100%;
+}
+.obs-all-wall {
+    background-color: #aa00ff !important;
+    box-shadow: 0 0 10px #aa00ff;
+}
+
+.obs-bottom { bottom: 0; }
+.obs-middle { bottom: 70px; }
+.obs-top    { bottom: 155px; }
+
+.elec-ball {
+    width: 25px;
+    height: 25px;
+    background: radial-gradient(circle, #fff 30%, #ffff00 80%);
+    border-radius: 50%;
+    position: absolute;
+    z-index: 6;
+    box-shadow: 0 0 15px #ffff00;
+}
+
+/* 💥【修正】爆発位置もプレイヤーに合わせて 10% → 22% へ移動 */
+#explosion {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    font-size: 100px;
+    line-height: 140px;
+    text-align: center;
+    left: 22%;
+    bottom: -45px;
+    transform: translate(-45px, 0) scale(0);
+    z-index: 10;
+    pointer-events: none;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#explosion.boom {
+    transform: translate(-45px, -20px) scale(1);
+}
+
+#attack-btn {
+    position: absolute;
+    top: 65px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 230, 0, 0.7);
+    color: #111;
+    font-size: 12px;
+    font-weight: bold;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    z-index: 18;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#attack-btn:active {
+    background: rgba(255, 255, 255, 0.9);
+    transform: scale(0.92);
+}
+
+.pos-top-left { left: 25px; right: auto; }
+.pos-top-right { right: 25px; left: auto; }
+
+.invincible { animation: blink 0.1s linear infinite; }
+@keyframes blink {
+    0% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
+}
+
+#overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+}
+
+#game-title {
+    font-size: 36px;
+    margin-bottom: 15px;
+    letter-spacing: 2px;
+    color: #ffcc00;
+}
+
+#result-container {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+    line-height: 1.6;
+}
+#res-score { color: #fff; font-size: 26px; }
+#res-hi-score { color: #ff5555; }
+
+#menu-settings {
+    margin-bottom: 20px;
+    text-align: center;
+    background: rgba(255,255,255,0.08);
+    padding: 12px 25px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+#menu-settings p {
+    font-size: 13px;
+    margin-bottom: 8px;
+    color: #ccc;
+}
+.setting-row button {
+    padding: 6px 18px; margin: 0 5px; font-size: 13px; font-weight: bold;
+    background: #444; color: #fff; border: 2px solid #555; border-radius: 5px; cursor: pointer;
+}
+.setting-row button.active {
+    background: #ffcc00; color: #111; border-color: #fff;
+}
+
+#start-btn {
+    padding: 12px 45px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 30px;
+    background-color: #fff;
+    color: #111;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
