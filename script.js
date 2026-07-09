@@ -1,27 +1,39 @@
 const stage = document.getElementById('game-stage');
 const player = document.getElementById('player');
 const scoreDisplay = document.getElementById('score');
+const hudHiScoreDisplay = document.getElementById('hud-hi-score');
 const lifeDisplay = document.getElementById('life');
 const overlay = document.getElementById('overlay');
 const gameTitle = document.getElementById('game-title');
 const startBtn = document.getElementById('start-btn');
 const attackBtn = document.getElementById('attack-btn');
 const explosion = document.getElementById('explosion');
+const pauseBtn = document.getElementById('pause-btn');
 
+// ポップアップ・リザルト要素
 const resultContainer = document.getElementById('result-container');
+const gameoverScores = document.getElementById('gameover-scores');
+const topHiScoreWrap = document.getElementById('top-hi-score-wrap');
 const resScore = document.getElementById('res-score');
 const resHiScore = document.getElementById('res-hi-score');
 const menuSettings = document.getElementById('menu-settings');
 const btnSetLeft = document.getElementById('btn-set-left');
 const btnSetRight = document.getElementById('btn-set-right');
 
+const howToModal = document.getElementById('how-to-modal');
+const howToOpenBtn = document.getElementById('how-to-open-btn');
+const howToCloseBtn = document.getElementById('how-to-close-btn');
+
 let isPlaying = false;
+let isPaused = false; // ⏸️ 一時停止中フラグ
 let score = 0;
 let hiScore = 0;
 let life = 3;
 let isInvincible = false;
 let animationFrameId;
 let spawnTimeoutId;
+let pauseStartTime = 0; // ポーズ延長タイマー計算用
+let nextSpawnDelay = 0; // 次の敵が出るまでの残り時間退避
 
 let playerY = 0;
 let velocityY = 0;
@@ -34,10 +46,13 @@ let obstacles = [];
 let elecBalls = [];
 let gameSpeed = 3.5;
 
+// ⚙️ 初期ロード
 window.addEventListener('DOMContentLoaded', () => {
     try {
         hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
     } catch(e) { hiScore = 0; }
+    resHiScore.textContent = hiScore;
+    hudHiScoreDisplay.textContent = hiScore;
     
     let savedPos = 'right';
     try {
@@ -64,6 +79,10 @@ function applyButtonPosition(position) {
 btnSetLeft.addEventListener('click', () => applyButtonPosition('left'));
 btnSetRight.addEventListener('click', () => applyButtonPosition('right'));
 
+// 遊び方モーダルの制御
+howToOpenBtn.addEventListener('click', () => howToModal.style.display = 'flex');
+howToCloseBtn.addEventListener('click', () => howToModal.style.display = 'none');
+
 startBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (startBtn.textContent === "BACK TO TOP") {
@@ -74,20 +93,41 @@ startBtn.addEventListener('click', (e) => {
 });
 
 function showTopMenu() {
-    gameTitle.textContent = "MARUMINE ROLL EX";
-    resultContainer.style.display = 'none';
+    gameTitle.textContent = "マルマインのゴロゴロ大作戦";
+    gameoverScores.style.display = 'none'; // リザルトスコアを隠す
+    topHiScoreWrap.style.display = 'block'; // 起動用ハイスコアに戻す
     menuSettings.style.display = 'block';
     startBtn.textContent = "START";
 }
 
 attackBtn.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
-    if (!isPlaying) return;
+    if (!isPlaying || isPaused) return; // 一時停止中は打てない
     fireElecBall();
 });
 
+// ⏸️ 一時停止（ポーズ）の切り替え処理
+pauseBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!isPlaying) return;
+
+    if (!isPaused) {
+        // ポーズにする
+        isPaused = true;
+        pauseBtn.textContent = "▶️"; // 再生マークに変える
+        player.style.animationPlayState = 'paused'; // 回転を止める
+        cancelAnimationFrame(animationFrameId);
+    } else {
+        // 再開する
+        isPaused = false;
+        pauseBtn.textContent = "⏸️";
+        player.style.animationPlayState = 'running'; // 回転再開
+        gameLoop(); // ループ復帰
+    }
+});
+
 window.addEventListener('pointerdown', (e) => {
-    if (!isPlaying || e.target === startBtn || e.target === attackBtn || e.target === btnSetLeft || e.target === btnSetRight) return;
+    if (!isPlaying || isPaused || e.target === startBtn || e.target === attackBtn || e.target === btnSetLeft || e.target === btnSetRight || e.target === pauseBtn) return;
 
     if (jumpCount === 0) {
         velocityY = firstJumpPower;
@@ -100,6 +140,7 @@ window.addEventListener('pointerdown', (e) => {
 
 function initGame() {
     isPlaying = true;
+    isPaused = false;
     score = 0;
     life = 3;
     gameSpeed = 3.5;
@@ -109,14 +150,17 @@ function initGame() {
     isInvincible = false;
     
     scoreDisplay.textContent = score;
+    hudHiScoreDisplay.textContent = hiScore;
     updateLifeDisplay();
     overlay.style.display = 'none';
     explosion.classList.remove('boom');
     player.style.display = 'block';
     
     player.style.animationDuration = '0.9s';
+    player.style.animationPlayState = 'running';
     player.classList.add('rolling');
     player.classList.remove('invincible');
+    pauseBtn.textContent = "⏸️";
 
     obstacles.forEach(obs => obs.element.remove());
     obstacles = [];
@@ -124,7 +168,11 @@ function initGame() {
     elecBalls = [];
 
     gameLoop();
-    spawnObstaclePattern();
+    
+    // 最初の敵出現タイマーをセット（次回以降はミリ秒を記録管理）
+    nextSpawnDelay = 2000;
+    pauseStartTime = Date.now();
+    spawnTimeoutId = setTimeout(spawnObstaclePattern, nextSpawnDelay);
 }
 
 function fireElecBall() {
@@ -151,6 +199,7 @@ function fireElecBall() {
 
 function spawnObstaclePattern() {
     if (!isPlaying) return;
+    if (isPaused) return; // ポーズ中は敵を生成しない
 
     const pattern = Math.floor(Math.random() * 4);
     const stageWidth = stage.clientWidth;
@@ -171,9 +220,29 @@ function spawnObstaclePattern() {
         createObstacleElement(stageWidth, 'obs-bottom', true, patternId);
     }
 
-    const nextSpawnTime = 2000 + Math.random() * 1200;
-    spawnTimeoutId = setTimeout(spawnObstaclePattern, nextSpawnTime / (gameSpeed * 0.25));
+    // 次の出現までの時間を計算して、ポーズ復帰用に変数へキープしておく
+    const baseTime = 2000 + Math.random() * 1200;
+    nextSpawnDelay = baseTime / (gameSpeed * 0.25);
+    pauseStartTime = Date.now();
+    
+    spawnTimeoutId = setTimeout(spawnObstaclePattern, nextSpawnDelay);
 }
+
+// ⏸️【追加ロジック】ポーズボタンが押された時に、タイマーの経過時間を保護・再計算する
+pauseBtn.addEventListener('click', () => {
+    if (!isPlaying) return;
+    
+    if (isPaused) {
+        // ポーズ開始：タイマーを止め、あと何ミリ秒後に生まれる予定だったかを残す
+        clearTimeout(spawnTimeoutId);
+        const elapsed = Date.now() - pauseStartTime;
+        nextSpawnDelay = Math.max(0, nextSpawnDelay - elapsed);
+    } else {
+        // ポーズ解除：残っていたミリ秒数でタイマーを再開する
+        pauseStartTime = Date.now();
+        spawnTimeoutId = setTimeout(spawnObstaclePattern, nextSpawnDelay);
+    }
+});
 
 function createObstacleElement(xPos, cssClass, isDestructible, patternId) {
     const obsEl = document.createElement('div');
@@ -193,8 +262,9 @@ function createObstacleElement(xPos, cssClass, isDestructible, patternId) {
 }
 
 function gameLoop() {
-    if (!isPlaying) return;
+    if (!isPlaying || isPaused) return; // 一時停止中はすべての挙動を止める
 
+    // --- 1. プレイヤーの物理演算 ---
     velocityY -= gravity;
     playerY += velocityY;
 
@@ -207,6 +277,7 @@ function gameLoop() {
 
     const oldScore = score;
 
+    // --- 2. エレキボールの移動と判定 ---
     for (let j = elecBalls.length - 1; j >= 0; j--) {
         const ball = elecBalls[j];
         ball.x += 8;
@@ -237,6 +308,10 @@ function gameLoop() {
             if (destroyedCount > 0) {
                 score += 10;
                 scoreDisplay.textContent = score;
+                // ハイスコアをリアルタイムで追い抜いた場合、HUD側も連動して更新
+                if (score > hiScore) {
+                    hudHiScoreDisplay.textContent = score;
+                }
             }
         }
 
@@ -246,6 +321,7 @@ function gameLoop() {
         }
     }
 
+    // --- 3. 障害物の移動とプレイヤー判定 ---
     let scoredPatternIds = [];
 
     for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -263,6 +339,10 @@ function gameLoop() {
                 score += 10; 
                 scoreDisplay.textContent = score;
                 scoredPatternIds.push(obs.patternId);
+                
+                if (score > 0 && score > hiScore) {
+                    hudHiScoreDisplay.textContent = score;
+                }
             }
 
             obs.element.remove();
@@ -288,8 +368,19 @@ function decreaseLife() {
         isInvincible = true;
         player.classList.add('invincible');
         setTimeout(() => {
-            isInvincible = false;
-            player.classList.remove('invincible');
+            if (isPaused) {
+                // ポーズ中に無敵タイマーが切れた場合の点滅解除用
+                const checkResume = setInterval(() => {
+                    if (!isPaused) {
+                        isInvincible = false;
+                        player.classList.remove('invincible');
+                        clearInterval(checkResume);
+                    }
+                }, 100);
+            } else {
+                isInvincible = false;
+                player.classList.remove('invincible');
+            }
         }, 1200);
     }
 }
@@ -329,6 +420,7 @@ function checkBallCollision(bEl, oEl) {
 
 function gameOver() {
     isPlaying = false;
+    isPaused = false;
     cancelAnimationFrame(animationFrameId);
     clearTimeout(spawnTimeoutId);
 
@@ -348,8 +440,12 @@ function gameOver() {
     setTimeout(() => {
         gameTitle.textContent = "GAME OVER";
         
+        // 📊 ゲームオーバー画面用リザルトの表示
         resScore.textContent = score;
         resHiScore.textContent = hiScore;
+        
+        topHiScoreWrap.style.display = 'none';   // トップ用の文字を消す
+        gameoverScores.style.display = 'block'; // 「YOUR SCORE」枠を出現させる
         resultContainer.style.display = 'block';
         menuSettings.style.display = 'none';
 
