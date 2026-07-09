@@ -4,21 +4,27 @@
     padding: 0;
 }
 
-body {
+/* 📱 画面のスクロールを完全に禁止し、アドレスバーのズレを防ぐ */
+html, body {
+    width: 100%;
+    height: 100dvh; /* dvh = 動的ビューポート高さ（アドレスバーを計算に含める） */
+    overflow: hidden;
     background-color: #111;
+    position: fixed; /* 固定して引っ張りを防止 */
+    top: 0; left: 0;
+}
+
+body {
     color: #fff;
     font-family: sans-serif;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    position: relative;
     user-select: none;
     -webkit-user-select: none;
 }
 
+/* 縦向き時の警告 */
 #orientation-warning {
     position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100vh;
+    top: 0; left: 0; width: 100vw; height: 100dvh;
     background: #222;
     z-index: 999;
     display: flex;
@@ -32,9 +38,10 @@ body {
     #orientation-warning { display: none; }
 }
 
+/* ゲーム全体の容器 */
 #game-container {
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     position: relative;
     display: flex;
     justify-content: center;
@@ -63,10 +70,9 @@ body {
     width: 100%;
     height: 100%;
     position: relative;
-    border-bottom: 20px solid #333;
+    border-bottom: 20px solid #333; /* これが地面ライン */
 }
 
-/* 👾【修正】マルマインの位置を 10% → 22% へ前に移動（ボタンとの被りを解消） */
 #player {
     width: 50px;
     height: 50px;
@@ -116,7 +122,6 @@ body {
     box-shadow: 0 0 15px #ffff00;
 }
 
-/* 💥【修正】爆発位置もプレイヤーに合わせて 10% → 22% へ移動 */
 #explosion {
     position: absolute;
     width: 140px;
