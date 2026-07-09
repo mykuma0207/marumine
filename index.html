@@ -1,1 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>マルマインのゴロゴロ大作戦 EX</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="orientation-warning">
+        🔄 スマホを横向きにしてプレイしてください
+    </div>
 
+    <div id="game-container">
+        <!-- UI表示エリア（ゲーム中はスコアとライフのみ） -->
+        <div id="hud-container">
+            <div id="score-container">
+                SCORE: <span id="score">0</span>
+            </div>
+            <div id="life-container">
+                LIFE: <span id="life">❤️❤️❤️</span>
+            </div>
+        </div>
+        
+        <!-- ゲーム画面 -->
+        <div id="game-stage">
+            <div id="player"></div>
+            <div id="explosion">💥</div>
+        </div>
+
+        <!-- ⚡️ スマホ用エレキボール発射ボタン（上部に配置、設定で左右切り替え） -->
+        <button id="attack-btn" class="pos-top-right">⚡️ ATTACK</button>
+
+        <!-- メインメニュー ＆ ゲームオーバー画面（オーバーレイ） -->
+        <div id="overlay">
+            <h1 id="game-title">MARUMINE ROLL EX</h1>
+            
+            <!-- 📊 【新規】ゲームオーバー用のスコア結果表示エリア（最初は非表示） -->
+            <div id="result-container" style="display: none;">
+                <p>YOUR SCORE: <span id="res-score">0</span></p>
+                <p>HI-SCORE: <span id="res-hi-score">0</span></p>
+            </div>
+
+            <!-- ⚙️ 【移動】トップ画面専用になったボタン位置設定 -->
+            <div id="menu-settings">
+                <p>【 攻撃ボタンの位置設定 】</p>
+                <div class="setting-row">
+                    <button id="btn-set-left">左上</button>
+                    <button id="btn-set-right" class="active">右上</button>
+                </div>
+            </div>
+
+            <button id="start-btn">START</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
