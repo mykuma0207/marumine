@@ -4,13 +4,12 @@
     padding: 0;
 }
 
-/* 📱 画面のスクロールを完全に禁止し、アドレスバーのズレを防ぐ */
 html, body {
     width: 100%;
-    height: 100dvh; /* dvh = 動的ビューポート高さ（アドレスバーを計算に含める） */
+    height: 100dvh;
     overflow: hidden;
     background-color: #111;
-    position: fixed; /* 固定して引っ張りを防止 */
+    position: fixed;
     top: 0; left: 0;
 }
 
@@ -21,7 +20,6 @@ body {
     -webkit-user-select: none;
 }
 
-/* 縦向き時の警告 */
 #orientation-warning {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100dvh;
@@ -38,7 +36,6 @@ body {
     #orientation-warning { display: none; }
 }
 
-/* ゲーム全体の容器 */
 #game-container {
     width: 100vw;
     height: 100dvh;
@@ -62,15 +59,39 @@ body {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
 }
 
+/* スコアの下にハイスコアを並べる */
+#score-wrap {
+    display: flex;
+    flex-direction: column;
+}
+#hud-hi-score-container {
+    font-size: 14px;
+    color: #ffcc00;
+    margin-top: 2px;
+}
+
 #life-container {
     color: #ff3366;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* ⏸️ 一時停止ボタン */
+#pause-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0;
+    z-index: 16;
 }
 
 #game-stage {
     width: 100%;
     height: 100%;
     position: relative;
-    border-bottom: 20px solid #333; /* これが地面ライン */
+    border-bottom: 20px solid #333;
 }
 
 #player {
@@ -140,6 +161,7 @@ body {
     transform: translate(-45px, -20px) scale(1);
 }
 
+/* ⚡️ 文字数に合わせてフォントサイズを10pxに調整 */
 #attack-btn {
     position: absolute;
     top: 65px;
@@ -148,7 +170,7 @@ body {
     border-radius: 50%;
     background: rgba(255, 230, 0, 0.7);
     color: #111;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: bold;
     border: 3px solid #fff;
     box-shadow: 0 4px 10px rgba(0,0,0,0.4);
@@ -156,6 +178,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    text-align: center;
+    white-space: nowrap;
 }
 #attack-btn:active {
     background: rgba(255, 255, 255, 0.9);
@@ -164,6 +188,32 @@ body {
 
 .pos-top-left { left: 25px; right: auto; }
 .pos-top-right { right: 25px; left: auto; }
+
+/* 📖 遊び方・設定共通モーダル */
+#how-to-modal {
+    position: absolute;
+    top: 0; left: 0; width: 100vw; height: 100dvh;
+    background: rgba(0,0,0,0.85);
+    z-index: 40;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background: #222;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    border: 2px solid #ffcc00;
+    width: 85%;
+    max-width: 450px;
+}
+.modal-content h2 { font-size: 20px; margin-bottom: 12px; color: #ffcc00; }
+.how-to-text { text-align: left; font-size: 13px; line-height: 1.5; margin-bottom: 15px; }
+.how-to-text p { margin-bottom: 10px; }
+#how-to-close-btn {
+    padding: 8px 25px; font-size: 14px; background: #fff; color: #111; border: none; border-radius: 20px; font-weight: bold;
+}
 
 .invincible { animation: blink 0.1s linear infinite; }
 @keyframes blink {
@@ -184,46 +234,51 @@ body {
 }
 
 #game-title {
-    font-size: 36px;
-    margin-bottom: 15px;
-    letter-spacing: 2px;
+    font-size: 32px;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
     color: #ffcc00;
 }
 
 #result-container {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: bold;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     text-align: center;
-    line-height: 1.6;
+    line-height: 1.5;
 }
-#res-score { color: #fff; font-size: 26px; }
+#res-score { color: #fff; font-size: 24px; }
 #res-hi-score { color: #ff5555; }
+#top-hi-score-wrap { color: #ffcc00; }
 
 #menu-settings {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     text-align: center;
     background: rgba(255,255,255,0.08);
-    padding: 12px 25px;
+    padding: 10px 20px;
     border-radius: 10px;
     border: 1px solid rgba(255,255,255,0.1);
 }
 #menu-settings p {
-    font-size: 13px;
-    margin-bottom: 8px;
+    font-size: 12px;
+    margin-bottom: 6px;
     color: #ccc;
 }
+.setting-row { margin-bottom: 8px; }
 .setting-row button {
-    padding: 6px 18px; margin: 0 5px; font-size: 13px; font-weight: bold;
+    padding: 5px 15px; margin: 0 4px; font-size: 12px; font-weight: bold;
     background: #444; color: #fff; border: 2px solid #555; border-radius: 5px; cursor: pointer;
 }
 .setting-row button.active {
     background: #ffcc00; color: #111; border-color: #fff;
 }
+#how-to-open-btn {
+    background: none; border: none; color: #00ffcc; font-size: 13px; font-weight: bold; cursor: pointer; text-decoration: underline; margin-top: 4px;
+}
 
 #start-btn {
-    padding: 12px 45px;
-    font-size: 18px;
+    padding: 10px 40px;
+    font-size: 16px;
     font-weight: bold;
     cursor: pointer;
     border: none;
