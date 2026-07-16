@@ -3,24 +3,22 @@ const player = document.getElementById('player');
 const scoreDisplay = document.getElementById('score');
 const hudHiScoreDisplay = document.getElementById('hud-hi-score');
 const lifeDisplay = document.getElementById('life');
-const overlay = document.getElementById('overlay');
-const gameTitle = document.getElementById('game-title');
-const startBtn = document.getElementById('start-btn');
 const attackBtn = document.getElementById('attack-btn');
 const explosion = document.getElementById('explosion');
 const pauseBtn = document.getElementById('pause-btn');
 
-// ポップアップ・リザルト要素
-const resultContainer = document.getElementById('result-container');
-const gameoverScores = document.getElementById('gameover-scores');
-const topHiScoreWrap = document.getElementById('top-hi-score-wrap');
+// 🪟【新規】完全に分離された2つの部屋の要素
+const titleMenu = document.getElementById('title-menu');
+const gameoverMenu = document.getElementById('gameover-menu');
+
 const resScore = document.getElementById('res-score');
 const resBestScore = document.getElementById('res-best-score');
 const resHiScore = document.getElementById('res-hi-score');
-const menuSettings = document.getElementById('menu-settings');
+const startBtn = document.getElementById('start-btn');
+const backToTopBtn = document.getElementById('back-to-top-btn');
+
 const btnSetLeft = document.getElementById('btn-set-left');
 const btnSetRight = document.getElementById('btn-set-right');
-
 const howToModal = document.getElementById('how-to-modal');
 const howToOpenBtn = document.getElementById('how-to-open-btn');
 const howToCloseBtn = document.getElementById('how-to-close-btn');
@@ -96,7 +94,6 @@ function applyButtonPosition(position) {
 btnSetLeft.addEventListener('click', () => applyButtonPosition('left'));
 btnSetRight.addEventListener('click', () => applyButtonPosition('right'));
 
-// 表示時に style.display を 'flex' に変更するよう安全にバインド
 howToOpenBtn.addEventListener('click', () => howToModal.style.display = 'flex');
 howToCloseBtn.addEventListener('click', () => howToModal.style.display = 'none');
 
@@ -135,24 +132,19 @@ function escapeHTML(str) {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// STARTボタンを押した時
 startBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (startBtn.textContent === "BACK TO TOP") {
-        showTopMenu();
-    } else {
-        initGame();
-    }
+    initGame();
 });
 
-function showTopMenu() {
-    gameTitle.textContent = "マルマインのゴロゴロ大作戦";
-    gameoverScores.style.display = 'none';
-    sendScoreContainer.style.display = 'none';
-    topHiScoreWrap.style.display = 'block';
-    menuSettings.style.display = 'block';
-    startBtn.textContent = "START";
-    resHiScore.textContent = hiScore;
-}
+// 🛠️【新規】BACK TO TOPボタンを押した時の処理
+backToTopBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    gameoverMenu.style.display = 'none'; // ゲームオーバー部屋を閉じる
+    titleMenu.style.display = 'block';   // トップ画面の部屋を開く
+    resHiScore.textContent = hiScore;    // 最新ハイスコアをセット
+});
 
 attackBtn.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
@@ -178,7 +170,7 @@ pauseBtn.addEventListener('click', (e) => {
 });
 
 window.addEventListener('pointerdown', (e) => {
-    if (!isPlaying || isPaused || e.target === startBtn || e.target === attackBtn || e.target === btnSetLeft || e.target === btnSetRight || e.target === pauseBtn || e.target === playerNameInput || e.target === sendScoreBtn) return;
+    if (!isPlaying || isPaused || e.target === startBtn || e.target === backToTopBtn || e.target === attackBtn || e.target === btnSetLeft || e.target === btnSetRight || e.target === pauseBtn || e.target === playerNameInput || e.target === sendScoreBtn) return;
 
     if (jumpCount === 0) {
         velocityY = firstJumpPower;
@@ -203,7 +195,11 @@ function initGame() {
     scoreDisplay.textContent = score;
     hudHiScoreDisplay.textContent = hiScore;
     updateLifeDisplay();
-    overlay.style.display = 'none';
+    
+    // 🛠️【修正】トップ画面とゲームオーバー画面の両方の部屋を確実に隠す
+    titleMenu.style.display = 'none';
+    gameoverMenu.style.display = 'none';
+    
     explosion.classList.remove('boom');
     player.style.display = 'block';
     
@@ -462,7 +458,7 @@ function checkBallCollision(bEl, oEl) {
     );
 }
 
-// 🌍 Firebaseへのスコア送信処理
+// 🌍 Firebaseのあなた専用データベースへスコアを送信する処理
 sendScoreBtn.addEventListener('click', async () => {
     const name = playerNameInput.value.trim();
     if (!name) {
@@ -478,6 +474,7 @@ sendScoreBtn.addEventListener('click', async () => {
         const rawData = await getRes.json();
         let ranking = Array.isArray(rawData) ? rawData : [];
 
+        // 今回スコアとハイスコアを自動判定し、高い方を送信データにする
         const finalSubmitScore = Math.max(score, hiScore);
         ranking.push({ name: name, score: finalSubmitScore });
         
@@ -505,7 +502,7 @@ sendScoreBtn.addEventListener('click', async () => {
             sendScoreBtn.textContent = "完了！";
             alert("世界ランキングに登録されました！");
             
-            // 🎯【重要バグ修正】remove()ではなくdisplayをnoneにして安全に不正連打をガード！
+            // 🎯【修正】送信完了後は送信コンテナだけを非表示にし、ゲームオーバーメニューは壊さない
             sendScoreContainer.style.display = 'none'; 
         } else {
             throw new Error();
@@ -523,6 +520,7 @@ function gameOver() {
     cancelAnimationFrame(animationFrameId);
     clearTimeout(spawnTimeoutId);
 
+    // 自端末ハイスコア（ローカル保存）の保護セーブ
     if (score > hiScore) {
         hiScore = score;
     }
@@ -532,24 +530,18 @@ function gameOver() {
 
     player.classList.remove('rolling', 'invincible');
     
-    // 💥 マルマイン消滅＆爆発
     player.style.display = 'none';
     explosion.style.bottom = playerY - 45 + 'px';
     explosion.classList.add('boom');
 
     setTimeout(() => {
-        gameTitle.textContent = "GAME OVER";
+        // 📊【完全バグ修正】ゲームオーバー専用の部屋だけをピンポイントで出現させる！
+        titleMenu.style.display = 'none';     // トップメニュー部屋は確実に隠す
+        gameoverMenu.style.display = 'block'; // ゲームオーバー専用部屋を展開！
         
-        // 📊 今回のスコアと、自端末ハイスコアを並べて美しく表示
         resScore.textContent = score;
         resBestScore.textContent = hiScore;
-        
-        topHiScoreWrap.style.display = 'none'; 
-        gameoverScores.style.display = 'block'; 
-        resultContainer.style.display = 'block';
-        menuSettings.style.display = 'none';
 
-        // 🎯【重要バグ修正】HTML要素は常に残っているため、毎回安全に再表示されます！
         if (score > 0 || hiScore > 0) {
             playerNameInput.value = '';
             try {
@@ -561,10 +553,7 @@ function gameOver() {
 
             sendScoreBtn.disabled = false;
             sendScoreBtn.textContent = "送信";
-            sendScoreContainer.style.display = 'block'; // 隠れていたフォームを安全に出現させる
+            sendScoreContainer.style.display = 'block'; // 隠れていた送信枠をリセット表示
         }
-
-        startBtn.textContent = "BACK TO TOP";
-        overlay.style.display = 'flex';
     }, 1000);
 }
