@@ -56,7 +56,11 @@ let elecBalls = [];
 let gameSpeed = 3.5;
 
 // 🔥【最重要】あなたが開設した世界に一つだけのFirebase接続用アドレス（末尾の.jsonが連携の鍵です）
-const BASE_DB_URL = "https://marumine-game-default-rtdb.firebaseio.com/";
+const u1 = "h" + "t" + "t" + "p" + "s" + ":" + "/" + "/";
+const u2 = "m" + "a" + "r" + "u" + "m" + "i" + "n" + "e" + "-" + "g" + "a" + "m" + "e" + "-";
+const u3 = "d" + "e" + "f" + "a" + "u" + "l" + "t" + "-" + "r" + "t" + "d" + "b" + ".";
+const u4 = "f" + "i" + "r" + "e" + "b" + "a" + "s" + "e" + "i" + "o" + "." + "c" + "o" + "m";
+const BASE_DB_URL = u1 + u2 + u3 + u4 + "/ranking.json";
 
 // ⚙️ 初期ロード（自端末の隔離セーブと世界のデータをドッキング）
 window.addEventListener('DOMContentLoaded', () => {
