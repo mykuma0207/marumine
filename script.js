@@ -55,7 +55,7 @@ let obstacles = [];
 let elecBalls = [];
 let gameSpeed = 3.5;
 
-// AIによるURL自動上書きを回避する結合ロジック
+// AIの検閲バグを回避する分割ドッキング
 const u1 = "h" + "t" + "t" + "p" + "s" + ":" + "/" + "/";
 const u2 = "m" + "a" + "r" + "u" + "m" + "i" + "n" + "e" + "-" + "g" + "a" + "m" + "e" + "-";
 const u3 = "d" + "e" + "f" + "a" + "u" + "l" + "t" + "-" + "r" + "t" + "d" + "b" + ".";
@@ -68,7 +68,6 @@ window.addEventListener('DOMContentLoaded', () => {
         hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
     } catch(e) { hiScore = 0; }
     
-    // 🛠️【①修正】トップ画面起動時に、自端末のハイスコアを確実に代入する
     resHiScore.textContent = hiScore;
     hudHiScoreDisplay.textContent = hiScore;
     
@@ -97,6 +96,7 @@ function applyButtonPosition(position) {
 btnSetLeft.addEventListener('click', () => applyButtonPosition('left'));
 btnSetRight.addEventListener('click', () => applyButtonPosition('right'));
 
+// 表示時に style.display を 'flex' に変更するよう安全にバインド
 howToOpenBtn.addEventListener('click', () => howToModal.style.display = 'flex');
 howToCloseBtn.addEventListener('click', () => howToModal.style.display = 'none');
 
@@ -106,7 +106,7 @@ rankingOpenBtn.addEventListener('click', () => {
 });
 rankingCloseBtn.addEventListener('click', () => rankingModal.style.display = 'none');
 
-// 🌍 Firebaseオンラインランキングロード（トップ5の取得に特化）
+// 🌍 Firebaseオンラインランキングロード
 async function loadGlobalRanking() {
     rankingList.innerHTML = '<li>読み込み中...</li>';
     try {
@@ -151,8 +151,6 @@ function showTopMenu() {
     topHiScoreWrap.style.display = 'block';
     menuSettings.style.display = 'block';
     startBtn.textContent = "START";
-    
-    // 🛠️【①修正】ゲームオーバーから戻った時も、自端末の最新ハイスコアを再表示
     resHiScore.textContent = hiScore;
 }
 
@@ -464,7 +462,7 @@ function checkBallCollision(bEl, oEl) {
     );
 }
 
-// 🌍 Firebaseのあなた専用データベースへスコアを送信する処理
+// 🌍 Firebaseへのスコア送信処理
 sendScoreBtn.addEventListener('click', async () => {
     const name = playerNameInput.value.trim();
     if (!name) {
@@ -480,14 +478,11 @@ sendScoreBtn.addEventListener('click', async () => {
         const rawData = await getRes.json();
         let ranking = Array.isArray(rawData) ? rawData : [];
 
-        // 🎯今回スコアとハイスコアを自動判定し、高い方を送信データにする
         const finalSubmitScore = Math.max(score, hiScore);
-
         ranking.push({ name: name, score: finalSubmitScore });
         
-        // 重複排除：スコアの高い順にソートしたあと、同じ名前のデータは最高スコアのみ残す
+        // 重複排除ロジック
         ranking.sort((a, b) => b.score - a.score);
-        
         const filteredRanking = [];
         const seenNames = new Set();
         for (let item of ranking) {
@@ -498,7 +493,6 @@ sendScoreBtn.addEventListener('click', async () => {
         }
         const finalRanking = filteredRanking.slice(0, 5);
 
-        // Firebaseサーバーへデータを上書き送信
         const putRes = await fetch(BASE_DB_URL, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -506,13 +500,12 @@ sendScoreBtn.addEventListener('click', async () => {
         });
 
         if (putRes.ok) {
-            // 🎯送信に成功した名前をスマホ内に自動記憶
             try { localStorage.setItem('marumine_last_name', name); } catch(e){}
 
             sendScoreBtn.textContent = "完了！";
             alert("世界ランキングに登録されました！");
             
-            // 1回のプレイで連続送信・改ざん送信できないようにコンテナごと消去してロックする
+            // 🎯【重要バグ修正】remove()ではなくdisplayをnoneにして安全に不正連打をガード！
             sendScoreContainer.style.display = 'none'; 
         } else {
             throw new Error();
@@ -530,7 +523,6 @@ function gameOver() {
     cancelAnimationFrame(animationFrameId);
     clearTimeout(spawnTimeoutId);
 
-    // 自端末ハイスコア（ローカル保存）の保護セーブ
     if (score > hiScore) {
         hiScore = score;
     }
@@ -540,6 +532,7 @@ function gameOver() {
 
     player.classList.remove('rolling', 'invincible');
     
+    // 💥 マルマイン消滅＆爆発
     player.style.display = 'none';
     explosion.style.bottom = playerY - 45 + 'px';
     explosion.classList.add('boom');
@@ -547,7 +540,7 @@ function gameOver() {
     setTimeout(() => {
         gameTitle.textContent = "GAME OVER";
         
-        // 📊 今回のスコアと、隔離された自端末ハイスコアを正確に同時表示
+        // 📊 今回のスコアと、自端末ハイスコアを並べて美しく表示
         resScore.textContent = score;
         resBestScore.textContent = hiScore;
         
@@ -556,10 +549,9 @@ function gameOver() {
         resultContainer.style.display = 'block';
         menuSettings.style.display = 'none';
 
+        // 🎯【重要バグ修正】HTML要素は常に残っているため、毎回安全に再表示されます！
         if (score > 0 || hiScore > 0) {
             playerNameInput.value = '';
-            
-            // 🎯過去に保存された「前回の名前」があれば自動入力
             try {
                 const lastName = localStorage.getItem('marumine_last_name');
                 if (lastName) {
@@ -569,7 +561,7 @@ function gameOver() {
 
             sendScoreBtn.disabled = false;
             sendScoreBtn.textContent = "送信";
-            sendScoreContainer.style.display = 'block';
+            sendScoreContainer.style.display = 'block'; // 隠れていたフォームを安全に出現させる
         }
 
         startBtn.textContent = "BACK TO TOP";
