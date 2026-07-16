@@ -74,6 +74,9 @@ window.addEventListener('DOMContentLoaded', () => {
         savedPos = localStorage.getItem('marumine_btn_pos') || 'left';
     } catch(e) {}
     applyButtonPosition(savedPos);
+    
+    // 🎯【最重要修正】起動時とページ更新時に、必ず世界のハイスコアを自動でロードする
+    loadGlobalRanking(true);
 });
 
 function applyButtonPosition(position) {
