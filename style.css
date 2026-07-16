@@ -159,7 +159,7 @@ body {
     transform: translate(-45px, -20px) scale(1);
 }
 
-/* ⚡️【修正】ボタンの高さを 65px → 95px へほんの少しだけ下に移動 */
+/* ⚡️ エレキボールボタンの位置（少し下へ移動） */
 #attack-btn {
     position: absolute;
     top: 95px;
