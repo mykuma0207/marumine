@@ -159,7 +159,6 @@ body {
     transform: translate(-45px, -20px) scale(1);
 }
 
-/* ⚡️ エレキボールボタンの位置（少し下へ移動） */
 #attack-btn {
     position: absolute;
     top: 95px;
@@ -264,7 +263,8 @@ body {
     line-height: 1.4;
 }
 #res-score { color: #fff; font-size: 22px; }
-#res-hi-score { color: #ff5555; }
+#res-best-score { color: #00ffcc; font-size: 22px; }
+#res-hi-score { color: #ff3366; font-size: 24px; }
 #top-hi-score-wrap { color: #ffcc00; }
 
 #send-score-container {
