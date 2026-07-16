@@ -31,7 +31,6 @@
             <div id="explosion">💥</div>
         </div>
 
-        <!-- スマホ用エレキボール発射ボタン -->
         <button id="attack-btn" class="pos-top-left">エレキボール</button>
 
         <!-- 遊び方説明ポップアップ -->
@@ -39,7 +38,7 @@
             <div class="modal-content">
                 <h2>📖 遊び方説明</h2>
                 <div class="modal-inner-text">
-                    <p><strong>【画面の左（または右）をタップ】</strong><br>通常ジャンプ / 空中でさらもう一回タップで2段ジャンプ！</p>
+                    <p><strong>【画面の左（または右）をタップ】</strong><br>通常ジャンプ / 空中でさらにもう一回タップで2段ジャンプ！</p>
                     <p><strong>【「エレキボール」ボタンをタップ】</strong><br>上・中・下すべてが塞がった紫の壁を、一撃で吹き飛ばすぞ！</p>
                 </div>
                 <button id="how-to-close-btn" class="modal-close-btn">閉じる</button>
@@ -51,35 +50,19 @@
             <div class="modal-content">
                 <h2>🏆 世界ランキング (TOP 5)</h2>
                 <ol id="ranking-list">
-                    <!-- 通信して取得した世界の順位が自動挿入されます -->
+                    <!-- 順位が自動挿入されます -->
                 </ol>
                 <button id="ranking-close-btn" class="modal-close-btn">閉じる</button>
             </div>
         </div>
 
-        <!-- メインメニュー ＆ ゲームオーバー画面 -->
-        <div id="overlay">
-            <h1 id="game-title">マルマインのゴロゴロ大作戦</h1>
-            
-            <div id="result-container">
-                <p id="top-hi-score-wrap">HI-SCORE: <span id="res-hi-score">0</span></p>
-                <div id="gameover-scores" style="display: none;">
-                    <p>YOUR SCORE: <span id="res-score">0</span></p>
-                    <p>BEST SCORE: <span id="res-best-score">0</span></p>
-                </div>
+        <!-- 🪟【最重要】メインメニュー（初期トップ画面専用の部屋） -->
+        <div id="title-menu" class="overlay-screen">
+            <h1 class="screen-title">マルマインのゴロゴロ大作戦</h1>
+            <div class="score-display-box">
+                <p>HI-SCORE: <span id="res-hi-score">0</span></p>
             </div>
-
-            <!-- ゲームオーバー用：世界ランキング送信欄 -->
-            <div id="send-score-container" style="display: none;">
-                <p>世界ランキングに登録しよう！</p>
-                <div class="input-row">
-                    <input type="text" id="player-name-input" maxlength="5" placeholder="なまえ(5文字)">
-                    <button id="send-score-btn">送信</button>
-                </div>
-            </div>
-
-            <!-- トップ画面の設定・追加ボタン欄 -->
-            <div id="menu-settings">
+            <div class="settings-box">
                 <p>【 攻撃ボタンの位置設定 】</p>
                 <div class="setting-row">
                     <button id="btn-set-left" class="active">左側</button>
@@ -90,8 +73,24 @@
                     <button id="ranking-open-btn">🏆 ランキング</button>
                 </div>
             </div>
-
             <button id="start-btn">START</button>
+        </div>
+
+        <!-- 🪟【最重要】ゲームオーバー画面専用の部屋（初期状態は非表示） -->
+        <div id="gameover-menu" class="overlay-screen" style="display: none;">
+            <h1 class="screen-title text-red">GAME OVER</h1>
+            <div class="score-display-box">
+                <p>YOUR SCORE: <span id="res-score">0</span></p>
+                <p class="text-teal">BEST SCORE: <span id="res-best-score">0</span></p>
+            </div>
+            <div id="send-score-container">
+                <p>世界ランキングに登録しよう！</p>
+                <div class="input-row">
+                    <input type="text" id="player-name-input" maxlength="5" placeholder="なまえ(5文字)">
+                    <button id="send-score-btn">送信</button>
+                </div>
+            </div>
+            <button id="back-to-top-btn">BACK TO TOP</button>
         </div>
     </div>
     <script src="script.js"></script>
