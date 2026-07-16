@@ -53,41 +53,42 @@ let obstacles = [];
 let elecBalls = [];
 let gameSpeed = 3.5;
 
-// 🎯【自動検閲上書きを100%回避するドッキングURL】
+// 🎯 AIの自動検閲上書きを100%回避するドッキングURL
 const u1 = "h" + "t" + "t" + "p" + "s" + ":" + "/" + "/";
 const u2 = "m" + "a" + "r" + "u" + "m" + "i" + "n" + "e" + "-" + "g" + "a" + "m" + "e" + "-";
 const u3 = "d" + "e" + "f" + "a" + "u" + "l" + "t" + "-" + "r" + "t" + "d" + "b" + ".";
 const u4 = "f" + "i" + "r" + "e" + "b" + "a" + "s" + "e" + "i" + "o" + "." + "c" + "o" + "m";
 const BASE_DB_URL = u1 + u2 + u3 + u4 + "/ranking.json";
 
-// ⚙️ 初期ロード（バグを誘発していた余計な連動を排除した安全設計）
+// ⚙️ 初期ロード
 window.addEventListener('DOMContentLoaded', () => {
     try {
         hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
     } catch(e) { hiScore = 0; }
     
-    resHiScore.textContent = hiScore;
+    // 自端末の最新ハイスコアをセット
     hudHiScoreDisplay.textContent = hiScore;
+    resHiScore.textContent = hiScore; // ロードが遅れても最初から表示しておく
     
     let savedPos = 'left';
     try {
         savedPos = localStorage.getItem('marumine_btn_pos') || 'left';
     } catch(e) {}
     applyButtonPosition(savedPos);
-    
-    // 🎯【最重要修正】起動時とページ更新時に、必ず世界のハイスコアを自動でロードする
+
+    // 起動・更新時に世界のデータを安全に読み込みます
     loadGlobalRanking(true);
 });
 
 function applyButtonPosition(position) {
     if (position === 'left') {
         attackBtn.className = 'pos-top-left';
-        btnSetLeft.classList.add('active');
-        btnSetRight.classList.remove('active');
+        btnSetLeft.className = 'active';
+        btnSetRight.className = '';
     } else {
         attackBtn.className = 'pos-top-right';
-        btnSetRight.classList.add('active');
-        btnSetLeft.classList.remove('active');
+        btnSetRight.className = 'active';
+        btnSetLeft.className = '';
     }
     try {
         localStorage.setItem('marumine_btn_pos', position);
@@ -102,32 +103,47 @@ howToCloseBtn.addEventListener('click', () => { howToModal.style.display = 'none
 
 rankingOpenBtn.addEventListener('click', () => {
     rankingModal.style.display = 'flex';
-    loadGlobalRanking(); 
+    loadGlobalRanking(false); 
 });
 rankingCloseBtn.addEventListener('click', () => { rankingModal.style.display = 'none'; });
 
 // 🌍 Firebaseオンラインランキングロード
-async function loadGlobalRanking() {
-    rankingList.innerHTML = '<li>読み込み中...</li>';
+async function loadGlobalRanking(isOnlyTopHUD = false) {
+    if (!isOnlyTopHUD) {
+        rankingList.innerHTML = '<li>読み込み中...</li>';
+    }
     try {
-        const res = await fetch(BASE_DB_URL);
+        // 🎯【最重要修正】ネットが重い時に無限ロードしてフリーズするのを防ぐ2秒タイムアウト装置！
+        const res = await fetch(BASE_DB_URL, {
+            signal: AbortSignal.timeout(2000) // 2000ミリ秒（2秒）で通信を諦めて次へ進む
+        });
         const rawData = await res.json();
         const ranking = Array.isArray(rawData) ? rawData : [];
 
         ranking.sort((a, b) => b.score - a.score);
 
-        rankingList.innerHTML = '';
-        for (let i = 0; i < 5; i++) {
-            const li = document.createElement('li');
-            if (ranking[i]) {
-                li.innerHTML = `<span>${i + 1}位. ${escapeHTML(ranking[i].name)}</span><span>${ranking[i].score}点</span>`;
-            } else {
-                li.innerHTML = `<span>${i + 1}位. ------</span><span>0点</span>`;
+        if (ranking.length > 0) {
+            resHiScore.textContent = ranking.score; // 世界1位の点数をトップに表示
+        } else {
+            resHiScore.textContent = hiScore; 
+        }
+
+        if (!isOnlyTopHUD) {
+            rankingList.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const li = document.createElement('li');
+                if (ranking[i]) {
+                    li.innerHTML = `<span>${i + 1}位. ${escapeHTML(ranking[i].name)}</span><span>${ranking[i].score}点</span>`;
+                } else {
+                    li.innerHTML = `<span>${i + 1}位. ------</span><span>0点</span>`;
+                }
+                rankingList.appendChild(li);
             }
-            rankingList.appendChild(li);
         }
     } catch (err) {
-        rankingList.innerHTML = '<li>通信エラーが発生しました</li>';
+        // 2秒経っても通信が終わらない、または電波がない場合は、フリーズさせずに自端末の記録で補う
+        resHiScore.textContent = hiScore;
+        if (!isOnlyTopHUD) rankingList.innerHTML = '<li>通信エラーが発生しました</li>';
     }
 }
 
