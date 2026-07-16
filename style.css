@@ -159,9 +159,10 @@ body {
     transform: translate(-45px, -20px) scale(1);
 }
 
+/* ⚡️【修正】ボタンの高さを 65px → 95px へほんの少しだけ下に移動 */
 #attack-btn {
     position: absolute;
-    top: 65px;
+    top: 95px;
     width: 80px;
     height: 80px;
     border-radius: 50%;
@@ -186,7 +187,6 @@ body {
 .pos-top-left { left: 25px; right: auto; }
 .pos-top-right { right: 25px; left: auto; }
 
-/* 📱 ポップアップモーダルの共通レイアウト */
 .modal-mask {
     position: absolute;
     top: 0; left: 0; width: 100vw; height: 100dvh;
@@ -212,7 +212,6 @@ body {
     padding: 6px 20px; font-size: 14px; background: #fff; color: #111; border: none; border-radius: 20px; font-weight: bold;
 }
 
-/* 🏆 オンラインランキング専用スタイル */
 #ranking-list {
     list-style: none;
     text-align: left;
@@ -268,7 +267,6 @@ body {
 #res-hi-score { color: #ff5555; }
 #top-hi-score-wrap { color: #ffcc00; }
 
-/* 📝 ハイスコア送信フォーム */
 #send-score-container {
     background: rgba(255, 51, 102, 0.15);
     border: 1px dashed #ff3366;
@@ -286,9 +284,6 @@ body {
 }
 #send-score-btn {
     padding: 5px 15px; font-size: 13px; font-weight: bold; background: #ff3366; color: #fff; border: none; border-radius: 4px; cursor: pointer;
-}
-#send-score-btn:disabled {
-    background: #555; color: #aaa; cursor: not-allowed;
 }
 
 #menu-settings {
