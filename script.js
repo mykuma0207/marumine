@@ -56,8 +56,7 @@ let elecBalls = [];
 let gameSpeed = 3.5;
 
 // 🔥【最重要】あなたが開設した世界に一つだけのFirebase接続用アドレス（末尾の.jsonが連携の鍵です）
-const dbPart1 = "marumine-game-default-rtdb";
-const BASE_DB_URL = "https://" + dbPart1 + "://";
+const BASE_DB_URL = "https://marumine-game-default-rtdb.firebaseio.com/";
 
 // ⚙️ 初期ロード（自端末の隔離セーブと世界のデータをドッキング）
 window.addEventListener('DOMContentLoaded', () => {
