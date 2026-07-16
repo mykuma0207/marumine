@@ -16,12 +16,12 @@
         <div id="hud-container">
             <div id="score-wrap">
                 <div id="score-container">SCORE: <span id="score">0</span></div>
-                <!-- 📊【新規】ゲーム中も現在のスコアの下にハイスコアを表示 -->
+                <!-- 📊【新規】ゲーム中スコアの下にハイスコアを表示 -->
                 <div id="hud-hi-score-container">HI-SCORE: <span id="hud-hi-score">0</span></div>
             </div>
             
             <div id="life-container">
-                <!-- ⏸️【新規】ゲーム中の一時停止ボタン -->
+                <!-- ⏸️【新規】一時停止ポーズボタン -->
                 <button id="pause-btn">⏸️</button>
                 LIFE: <span id="life">❤️❤️❤️</span>
             </div>
@@ -33,18 +33,29 @@
             <div id="explosion">💥</div>
         </div>
 
-        <!-- ⚡️【テキスト変更】アタックから「エレキボール」に表記を変更 -->
+        <!-- ⚡️【テキスト変更】「エレキボール」表記に変更 -->
         <button id="attack-btn" class="pos-top-right">エレキボール</button>
 
-        <!-- 📖【新規】遊び方説明のポップアップ（初期状態は非表示） -->
-        <div id="how-to-modal">
+        <!-- 📖【新規】遊び方説明ポップアップ -->
+        <div id="how-to-modal" class="modal-mask">
             <div class="modal-content">
                 <h2>📖 遊び方説明</h2>
-                <div class="how-to-text">
+                <div class="modal-inner-text">
                     <p><strong>【画面の左（または右）をタップ】</strong><br>通常ジャンプ / 空中でさらにもう一回タップで2段ジャンプ！</p>
                     <p><strong>【「エレキボール」ボタンをタップ】</strong><br>上・中・下すべてが塞がった紫の壁を、一撃で吹き飛ばすぞ！</p>
                 </div>
-                <button id="how-to-close-btn">閉じる</button>
+                <button id="how-to-close-btn" class="modal-close-btn">閉じる</button>
+            </div>
+        </div>
+
+        <!-- 🏆【新規】世界共通オンラインランキングポップアップ -->
+        <div id="ranking-modal" class="modal-mask">
+            <div class="modal-content">
+                <h2>🏆 世界ランキング (TOP 5)</h2>
+                <ol id="ranking-list">
+                    <!-- 通信して取得した世界の順位が自動挿入されます -->
+                </ol>
+                <button id="ranking-close-btn" class="modal-close-btn">閉じる</button>
             </div>
         </div>
 
@@ -53,23 +64,34 @@
             <!-- ✏️【変更】タイトルを「マルマインのゴロゴロ大作戦」に日本語化 -->
             <h1 id="game-title">マルマインのゴロゴロ大作戦</h1>
             
-            <!-- 📊 トップ画面にもハイスコアを表示する枠 -->
             <div id="result-container">
-                <p id="top-hi-score-wrap">HI-SCORE: <span id="res-hi-score">0</span></p>
+                <p id="top-hi-score-wrap">GLOBAL HI-SCORE: <span id="res-hi-score">0</span></p>
                 <div id="gameover-scores" style="display: none;">
                     <p>YOUR SCORE: <span id="res-score">0</span></p>
                 </div>
             </div>
 
-            <!-- トップ画面の設定欄 -->
+            <!-- 📝【新規】ゲームオーバー用：ハイスコア送信欄 -->
+            <div id="send-score-container" style="display: none;">
+                <p>オンラインランキングに登録しよう！</p>
+                <div class="input-row">
+                    <input type="text" id="player-name-input" maxlength="5" placeholder="なまえ(5文字)">
+                    <button id="send-score-btn">送信</button>
+                </div>
+            </div>
+
+            <!-- トップ画面の設定・追加ボタン欄 -->
             <div id="menu-settings">
                 <p>【 ボタンの位置設定 】</p>
                 <div class="setting-row">
                     <button id="btn-set-left">左上</button>
                     <button id="btn-set-right" class="active">右上</button>
                 </div>
-                <!-- 📖【新規】トップ画面専用の遊び方ボタン -->
-                <button id="how-to-open-btn">📖 遊び方</button>
+                <!-- 📖🏆【新規】各種サブメニューボタン -->
+                <div class="menu-sub-btns">
+                    <button id="how-to-open-btn">📖 遊び方</button>
+                    <button id="ranking-open-btn">🏆 ランキング</button>
+                </div>
             </div>
 
             <button id="start-btn">START</button>
