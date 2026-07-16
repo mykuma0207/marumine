@@ -31,7 +31,6 @@
             <div id="explosion">💥</div>
         </div>
 
-        <!-- スマホ用エレキボール発射ボタン -->
         <button id="attack-btn" class="pos-top-left">エレキボール</button>
 
         <!-- 遊び方説明ポップアップ -->
@@ -46,7 +45,7 @@
             </div>
         </div>
 
-        <!-- 世界共通オンラインランキングポップアップ -->
+        <!-- 🏆 Firebaseオンラインランキングポップアップ -->
         <div id="ranking-modal" class="modal-mask">
             <div class="modal-content">
                 <h2>🏆 世界ランキング (TOP 5)</h2>
@@ -65,12 +64,13 @@
                 <p id="top-hi-score-wrap">GLOBAL HI-SCORE: <span id="res-hi-score">0</span></p>
                 <div id="gameover-scores" style="display: none;">
                     <p>YOUR SCORE: <span id="res-score">0</span></p>
+                    <p>HI-SCORE: <span id="res-best-score">0</span></p>
                 </div>
             </div>
 
-            <!-- ゲームオーバー用：ハイスコア送信欄 -->
+            <!-- 📝 ゲームオーバー用：世界ランキング送信欄 -->
             <div id="send-score-container" style="display: none;">
-                <p>オンラインランキングに登録しよう！</p>
+                <p>世界ランキングに登録しよう！</p>
                 <div class="input-row">
                     <input type="text" id="player-name-input" maxlength="5" placeholder="なまえ(5文字)">
                     <button id="send-score-btn">送信</button>
