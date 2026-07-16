@@ -186,45 +186,52 @@ body {
 .pos-top-left { left: 25px; right: auto; }
 .pos-top-right { right: 25px; left: auto; }
 
+/* 📱 ポップアップの背景マスク */
 .modal-mask {
     position: absolute;
     top: 0; left: 0; width: 100vw; height: 100dvh;
     background: rgba(0,0,0,0.85);
     z-index: 40;
-    display: none;
+    display: flex;
     justify-content: center;
-    align-items: center;
-}
-.modal-content {
-    background: #222;
-    padding: 20px;
-    border-radius: 15px;
-    text-align: center;
-    border: 2px solid #ffcc00;
-    width: 85%;
-    max-width: 420px;
-}
-.modal-content h2 { font-size: 18px; margin-bottom: 12px; color: #ffcc00; }
-.modal-inner-text { text-align: left; font-size: 13px; line-height: 1.5; margin-bottom: 15px; }
-.modal-inner-text p { margin-bottom: 8px; }
-.modal-close-btn {
-    padding: 6px 20px; font-size: 14px; background: #fff; color: #111; border: none; border-radius: 20px; font-weight: bold;
+    align-items: flex-start; /* アドレスバーを避けるため上基準にする */
 }
 
+/* 🛠️【修正】ランキング・遊び方画面の横幅をスリムにし、高さをコンパクトに調整 */
+.modal-content {
+    background: #222;
+    padding: 12px 20px; /* 余白を削って小さく */
+    border-radius: 12px;
+    text-align: center;
+    border: 2px solid #ffcc00;
+    width: 75%; /* 横幅を 85% → 75% に小さく */
+    max-width: 360px; /* 最大横幅を 420px → 360px に縮小 */
+    margin-top: 4vh; /* 上部から少し離した位置で完全に固定 */
+}
+.modal-content h2 { font-size: 15px; margin-bottom: 6px; color: #ffcc00; }
+.modal-inner-text { text-align: left; font-size: 12px; line-height: 1.4; margin-bottom: 10px; }
+.modal-inner-text p { margin-bottom: 6px; }
+
+/* 🛠️【修正】ボタンのサイズもひと回り縮小 */
+.modal-close-btn {
+    padding: 4px 18px; font-size: 12px; background: #fff; color: #111; border: none; border-radius: 15px; font-weight: bold;
+}
+
+/* 🛠️【修正】ランキングリストの行間と文字サイズを少し縮小 */
 #ranking-list {
     list-style: none;
     text-align: left;
-    margin: 10px auto 18px;
-    width: 85%;
-    font-size: 14px;
+    margin: 5px auto 10px;
+    width: 90%;
+    font-size: 13px; /* 14px → 13px */
     font-weight: bold;
-    line-height: 1.8;
+    line-height: 1.6; /* 1.8 → 1.6 */
 }
 #ranking-list li {
     display: flex;
     justify-content: space-between;
     border-bottom: 1px dashed #444;
-    padding: 2px 0;
+    padding: 1px 0;
 }
 #ranking-list li:nth-child(1) { color: #ffcc00; }
 #ranking-list li:nth-child(2) { color: #cccccc; }
@@ -237,12 +244,11 @@ body {
     100% { opacity: 0.3; }
 }
 
-/* 🛠️【埋もれバグ修正】アドレスバーに押し下げられないよう配置ロジックを最適化 */
 #overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.8);
-    display: block; /* flexからblockに変更 */
+    display: block;
     z-index: 20;
     text-align: center;
     overflow: hidden;
@@ -250,7 +256,7 @@ body {
 
 #game-title {
     font-size: 28px;
-    margin-top: 5vh; /* 上からの割合で配置 */
+    margin-top: 5vh;
     margin-bottom: 5px;
     letter-spacing: 1px;
     color: #ffcc00;
@@ -320,7 +326,6 @@ body {
 }
 #ranking-open-btn { color: #ffcc00; }
 
-/* STARTボタンをさらに押しやすいように独立配置 */
 #start-btn {
     display: block;
     margin: 5px auto 0;
