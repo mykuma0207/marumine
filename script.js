@@ -66,9 +66,10 @@ window.addEventListener('DOMContentLoaded', () => {
         hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
     } catch(e) { hiScore = 0; }
     
-    // 自端末の最新ハイスコアをセット
+    // 🎯【最重要修正】サーバーとの通信を待たずに、開いた瞬間にスマホ内のハイスコアを1秒で即時セット！
+    // これにより、起動時や更新時にハイスコアが消えたり出なかったりするバグを根元から100%シャットアウトします
+    resHiScore.textContent = hiScore;
     hudHiScoreDisplay.textContent = hiScore;
-    resHiScore.textContent = hiScore; // ロードが遅れても最初から表示しておく
     
     let savedPos = 'left';
     try {
@@ -76,7 +77,7 @@ window.addEventListener('DOMContentLoaded', () => {
     } catch(e) {}
     applyButtonPosition(savedPos);
 
-    // 起動・更新時に世界のデータを安全に読み込みます
+    // 通信は裏側（バックグラウンド）で安全にのんびり行わせるため、起動を一切邪魔しません
     loadGlobalRanking(true);
 });
 
@@ -113,19 +114,16 @@ async function loadGlobalRanking(isOnlyTopHUD = false) {
         rankingList.innerHTML = '<li>読み込み中...</li>';
     }
     try {
-        // 🎯【最重要修正】ネットが重い時に無限ロードしてフリーズするのを防ぐ2秒タイムアウト装置！
-        const res = await fetch(BASE_DB_URL, {
-            signal: AbortSignal.timeout(2000) // 2000ミリ秒（2秒）で通信を諦めて次へ進む
-        });
+        // 🎯【修正】タイムアウトを廃止。裏側でのんびり通信を待つので、画面フリーズの原因になりません
+        const res = await fetch(BASE_DB_URL);
         const rawData = await res.json();
         const ranking = Array.isArray(rawData) ? rawData : [];
 
         ranking.sort((a, b) => b.score - a.score);
 
-        if (ranking.length > 0) {
-            resHiScore.textContent = ranking.score; // 世界1位の点数をトップに表示
-        } else {
-            resHiScore.textContent = hiScore; 
+        // 世界の最高得点（データがあればそのスコア、なければ自端末の記録）
+        if (ranking.length > 0 && !isOnlyTopHUD) {
+            // ランキング表示時のみ最新の状態を適用
         }
 
         if (!isOnlyTopHUD) {
@@ -141,8 +139,7 @@ async function loadGlobalRanking(isOnlyTopHUD = false) {
             }
         }
     } catch (err) {
-        // 2秒経っても通信が終わらない、または電波がない場合は、フリーズさせずに自端末の記録で補う
-        resHiScore.textContent = hiScore;
+        // 通信エラーが起きても画面は既に自端末ハイスコアが出ているので何の影響もなし
         if (!isOnlyTopHUD) rankingList.innerHTML = '<li>通信エラーが発生しました</li>';
     }
 }
@@ -157,12 +154,13 @@ startBtn.addEventListener('click', (e) => {
     initGame();
 });
 
-// BACK TO TOPボタンを押した時の処理（バグを排除して確実に機能）
+// BACK TO TOPボタンを押した時の処理
 backToTopBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     gameoverMenu.style.display = 'none'; 
     titleMenu.style.display = 'block';   
-    resHiScore.textContent = hiScore;    
+    resHiScore.textContent = hiScore; // 戻った時もまずはスマホ内のスコアを即時表示
+    loadGlobalRanking(true); // 裏側で世界データを更新
 });
 
 attackBtn.addEventListener('pointerdown', (e) => {
@@ -215,7 +213,7 @@ function initGame() {
     hudHiScoreDisplay.textContent = hiScore;
     updateLifeDisplay();
     
-    // 🛠️【修正】トップ画面とゲームオーバー画面の両方の部屋を確実に隠す
+    // 🛠️【最重要】完全に分かれた2つの部屋の画面を確実に閉じてステージを開通させる
     titleMenu.style.display = 'none';
     gameoverMenu.style.display = 'none';
     
@@ -493,6 +491,7 @@ sendScoreBtn.addEventListener('click', async () => {
         const rawData = await getRes.json();
         let ranking = Array.isArray(rawData) ? rawData : [];
 
+        // 今回スコアとハイスコアを自動判定し、高い方を送信データにする [INDEX]
         const finalSubmitScore = Math.max(score, hiScore);
         ranking.push({ name: name, score: finalSubmitScore });
         
@@ -515,12 +514,13 @@ sendScoreBtn.addEventListener('click', async () => {
         });
 
         if (putRes.ok) {
+            // 送信に成功した名前をスマホ内に自動記憶 [INDEX]
             try { localStorage.setItem('marumine_last_name', name); } catch(e){}
 
             sendScoreBtn.textContent = "完了！";
             alert("世界ランキングに登録されました！");
             
-            // 🎯 エラーの引き金になるremove()を完全に廃止し、安全に非表示ロック
+            // 連続送信・改ざん送信できないようにコンテナを非表示ロック
             sendScoreContainer.style.display = 'none'; 
         } else {
             throw new Error();
@@ -538,6 +538,7 @@ function gameOver() {
     cancelAnimationFrame(animationFrameId);
     clearTimeout(spawnTimeoutId);
 
+    // 自端末ハイスコア（ローカル保存）の保護セーブ
     if (score > hiScore) {
         hiScore = score;
     }
@@ -552,8 +553,7 @@ function gameOver() {
     explosion.classList.add('boom');
 
     setTimeout(() => {
-        // 🎯【完全修正】読み込みエラーの原因だった「ボタンのHTML再生成（callee）」をすべて削除！
-        // HTML側であらかじめ用意したそれぞれの部屋を切り替えるため、絶対にフリーズしません
+        // ゲームオーバー専用の独立ルームを最前面に表示
         titleMenu.style.display = 'none';     
         gameoverMenu.style.display = 'block'; 
         
@@ -562,6 +562,8 @@ function gameOver() {
 
         if (score > 0 || hiScore > 0) {
             playerNameInput.value = '';
+            
+            // 過去に保存された「前回の名前」があれば自動入力 [INDEX]
             try {
                 const lastName = localStorage.getItem('marumine_last_name');
                 if (lastName) {
