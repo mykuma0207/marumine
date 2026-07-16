@@ -55,7 +55,7 @@ let obstacles = [];
 let elecBalls = [];
 let gameSpeed = 3.5;
 
-// AIによる自動検閲・URL上書きバグを100%回避する合体システム
+// AIによるURL自動上書きを回避する結合ロジック
 const u1 = "h" + "t" + "t" + "p" + "s" + ":" + "/" + "/";
 const u2 = "m" + "a" + "r" + "u" + "m" + "i" + "n" + "e" + "-" + "g" + "a" + "m" + "e" + "-";
 const u3 = "d" + "e" + "f" + "a" + "u" + "l" + "t" + "-" + "r" + "t" + "d" + "b" + ".";
@@ -68,7 +68,8 @@ window.addEventListener('DOMContentLoaded', () => {
         hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
     } catch(e) { hiScore = 0; }
     
-    resBestScore.textContent = hiScore;
+    // 🛠️【①修正】トップ画面起動時に、自端末のハイスコアを確実に代入する
+    resHiScore.textContent = hiScore;
     hudHiScoreDisplay.textContent = hiScore;
     
     let savedPos = 'left';
@@ -76,9 +77,6 @@ window.addEventListener('DOMContentLoaded', () => {
         savedPos = localStorage.getItem('marumine_btn_pos') || 'left';
     } catch(e) {}
     applyButtonPosition(savedPos);
-    
-    // クラウドから最新データをロード
-    loadGlobalRanking(true);
 });
 
 function applyButtonPosition(position) {
@@ -104,15 +102,13 @@ howToCloseBtn.addEventListener('click', () => howToModal.style.display = 'none')
 
 rankingOpenBtn.addEventListener('click', () => {
     rankingModal.style.display = 'flex';
-    loadGlobalRanking(false); 
+    loadGlobalRanking(); 
 });
 rankingCloseBtn.addEventListener('click', () => rankingModal.style.display = 'none');
 
-// 🌍 Firebaseオンラインランキングロード
-async function loadGlobalRanking(isOnlyTopHUD = false) {
-    if (!isOnlyTopHUD) {
-        rankingList.innerHTML = '<li>読み込み中...</li>';
-    }
+// 🌍 Firebaseオンラインランキングロード（トップ5の取得に特化）
+async function loadGlobalRanking() {
+    rankingList.innerHTML = '<li>読み込み中...</li>';
     try {
         const res = await fetch(BASE_DB_URL);
         const rawData = await res.json();
@@ -120,26 +116,18 @@ async function loadGlobalRanking(isOnlyTopHUD = false) {
 
         ranking.sort((a, b) => b.score - a.score);
 
-        if (ranking.length > 0) {
-            resHiScore.textContent = ranking[0].score; // 世界1位の点数をトップに表示
-        } else {
-            resHiScore.textContent = "0";
-        }
-
-        if (!isOnlyTopHUD) {
-            rankingList.innerHTML = '';
-            for (let i = 0; i < 5; i++) {
-                const li = document.createElement('li');
-                if (ranking[i]) {
-                    li.innerHTML = `<span>${i + 1}位. ${escapeHTML(ranking[i].name)}</span><span>${ranking[i].score}点</span>`;
-                } else {
-                    li.innerHTML = `<span>${i + 1}位. ------</span><span>0点</span>`;
-                }
-                rankingList.appendChild(li);
+        rankingList.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const li = document.createElement('li');
+            if (ranking[i]) {
+                li.innerHTML = `<span>${i + 1}位. ${escapeHTML(ranking[i].name)}</span><span>${ranking[i].score}点</span>`;
+            } else {
+                li.innerHTML = `<span>${i + 1}位. ------</span><span>0点</span>`;
             }
+            rankingList.appendChild(li);
         }
     } catch (err) {
-        if (!isOnlyTopHUD) rankingList.innerHTML = '<li>通信エラーが発生しました</li>';
+        rankingList.innerHTML = '<li>通信エラーが発生しました</li>';
     }
 }
 
@@ -163,7 +151,9 @@ function showTopMenu() {
     topHiScoreWrap.style.display = 'block';
     menuSettings.style.display = 'block';
     startBtn.textContent = "START";
-    loadGlobalRanking(true);
+    
+    // 🛠️【①修正】ゲームオーバーから戻った時も、自端末の最新ハイスコアを再表示
+    resHiScore.textContent = hiScore;
 }
 
 attackBtn.addEventListener('pointerdown', (e) => {
