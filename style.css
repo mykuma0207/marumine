@@ -186,46 +186,44 @@ body {
 .pos-top-left { left: 25px; right: auto; }
 .pos-top-right { right: 25px; left: auto; }
 
-/* 📱 ポップアップの背景マスク */
+/* 📱【重要修正】初期表示時は非表示にし、JSで呼ばれた時だけ綺麗に上基準で開くように修正 */
 .modal-mask {
     position: absolute;
     top: 0; left: 0; width: 100vw; height: 100dvh;
     background: rgba(0,0,0,0.85);
     z-index: 40;
-    display: flex;
+    display: none; /* flexからnoneに修正（勝手に開くバグを解消） */
     justify-content: center;
-    align-items: flex-start; /* アドレスバーを避けるため上基準にする */
+    align-items: flex-start; 
 }
 
-/* 🛠️【修正】ランキング・遊び方画面の横幅をスリムにし、高さをコンパクトに調整 */
+/* ランキング・遊び方のコンパクト画面 */
 .modal-content {
     background: #222;
-    padding: 12px 20px; /* 余白を削って小さく */
+    padding: 12px 20px; 
     border-radius: 12px;
     text-align: center;
     border: 2px solid #ffcc00;
-    width: 75%; /* 横幅を 85% → 75% に小さく */
-    max-width: 360px; /* 最大横幅を 420px → 360px に縮小 */
-    margin-top: 4vh; /* 上部から少し離した位置で完全に固定 */
+    width: 75%; 
+    max-width: 360px; 
+    margin-top: 4vh; 
 }
 .modal-content h2 { font-size: 15px; margin-bottom: 6px; color: #ffcc00; }
 .modal-inner-text { text-align: left; font-size: 12px; line-height: 1.4; margin-bottom: 10px; }
 .modal-inner-text p { margin-bottom: 6px; }
 
-/* 🛠️【修正】ボタンのサイズもひと回り縮小 */
 .modal-close-btn {
     padding: 4px 18px; font-size: 12px; background: #fff; color: #111; border: none; border-radius: 15px; font-weight: bold;
 }
 
-/* 🛠️【修正】ランキングリストの行間と文字サイズを少し縮小 */
 #ranking-list {
     list-style: none;
     text-align: left;
     margin: 5px auto 10px;
     width: 90%;
-    font-size: 13px; /* 14px → 13px */
+    font-size: 13px; 
     font-weight: bold;
-    line-height: 1.6; /* 1.8 → 1.6 */
+    line-height: 1.6; 
 }
 #ranking-list li {
     display: flex;
@@ -244,11 +242,12 @@ body {
     100% { opacity: 0.3; }
 }
 
+/* トップ・ゲームオーバーオーバーレイ（絶対配置） */
 #overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.8);
-    display: block;
+    display: block; 
     z-index: 20;
     text-align: center;
     overflow: hidden;
@@ -256,7 +255,7 @@ body {
 
 #game-title {
     font-size: 28px;
-    margin-top: 5vh;
+    margin-top: 5vh; 
     margin-bottom: 5px;
     letter-spacing: 1px;
     color: #ffcc00;
