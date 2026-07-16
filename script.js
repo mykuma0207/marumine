@@ -445,7 +445,6 @@ function updateLifeDisplay() {
     lifeDisplay.textContent = '❤️'.repeat(Math.max(0, life));
 }
 
-// プレイヤー（円）と障害物（四角）の判定
 function checkCollision(pEl, oEl) {
     const pRect = pEl.getBoundingClientRect();
     const oRect = oEl.getBoundingClientRect();
@@ -475,7 +474,7 @@ function checkBallCollision(bEl, oEl) {
     );
 }
 
-// 🌍 Firebaseのあなた専用データベースへスコアを送信する最新処理
+// 🌍 Firebaseのあなた専用データベースへスコアを送信する修正版処理
 sendScoreBtn.addEventListener('click', async () => {
     const name = playerNameInput.value.trim();
     if (!name) {
@@ -487,9 +486,12 @@ sendScoreBtn.addEventListener('click', async () => {
     sendScoreBtn.textContent = "送信中...";
 
     try {
-        // 1. あなたのFirebaseから最新のランキングを取得
+        // 1. 最新のランキングデータをロード
         const getRes = await fetch(BASE_DB_URL);
-        let ranking = await getRes.json() || [];
+        const rawData = await getRes.json();
+        
+        // 🎯【最重要大バグ修正】データが空っぽ（null）の場合は新しく空の配列を作る処理を追加！
+        let ranking = Array.isArray(rawData) ? rawData : [];
 
         // 2. 今回のスコアをリストに追加して上位5位に並び替える
         ranking.push({ name: name, score: score });
@@ -511,20 +513,19 @@ sendScoreBtn.addEventListener('click', async () => {
             throw new Error();
         }
     } catch (err) {
-        alert("送信に失敗しました。Realtime Databaseのルールを確認してください。");
+        alert("送信に失敗しました。時間を置いて再度お試しください。");
         sendScoreBtn.disabled = false;
         sendScoreBtn.textContent = "送信";
     }
 });
 
-// 🎯 ゲームオーバー処理
 function gameOver() {
     isPlaying = false;
     isPaused = false;
     cancelAnimationFrame(animationFrameId);
     clearTimeout(spawnTimeoutId);
 
-    // 自端末ハイスコア（ローカル保存）の保護セーブ
+    // 自端末ハイスコア（ローカル保存）の隔離セーブ
     if (score > hiScore) {
         hiScore = score;
     }
@@ -541,12 +542,11 @@ function gameOver() {
     setTimeout(() => {
         gameTitle.textContent = "GAME OVER";
         
-        // 📊「今回のスコア」と「自端末のハイスコア」をバグなしで両方表示！
         resScore.textContent = score;
         resBestScore.textContent = hiScore;
         
         topHiScoreWrap.style.display = 'none'; 
-        gameoverScores.style.display = 'block'; // 確実に両方画面に並びます
+        gameoverScores.style.display = 'block'; 
         resultContainer.style.display = 'block';
         menuSettings.style.display = 'none';
 
