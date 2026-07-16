@@ -15,6 +15,7 @@ const resultContainer = document.getElementById('result-container');
 const gameoverScores = document.getElementById('gameover-scores');
 const topHiScoreWrap = document.getElementById('top-hi-score-wrap');
 const resScore = document.getElementById('res-score');
+const resBestScore = document.getElementById('res-best-score');
 const resHiScore = document.getElementById('res-hi-score');
 const menuSettings = document.getElementById('menu-settings');
 const btnSetLeft = document.getElementById('btn-set-left');
@@ -54,27 +55,26 @@ let obstacles = [];
 let elecBalls = [];
 let gameSpeed = 3.5;
 
-// 🌍 専用のクローズド部屋ID
-const API_URL = "https://jsonbin.io"; 
-const MASTER_KEY = "$2a$10$wEUnU9r8U.XwH7f4v6yUreB2.Dk2X7nREK3X7GgWclm96T3D9m0B2";
+// 🔥【最重要】あなたが開設した世界に一つだけのFirebase接続用アドレス（末尾の.jsonが連携の鍵です）
+const BASE_DB_URL = "https://firebaseio.com";
 
-// ⚙️ 初期ロード（自端末内に隔離保存することでエラー巻き込みを完全ガード）
+// ⚙️ 初期ロード（自端末の隔離セーブと世界のデータをドッキング）
 window.addEventListener('DOMContentLoaded', () => {
     try {
         hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
     } catch(e) { hiScore = 0; }
     
-    resHiScore.textContent = hiScore;
+    resBestScore.textContent = hiScore;
     hudHiScoreDisplay.textContent = hiScore;
     
-    // 【重要修正】初回起動時のデフォルトを「左配置 'left'」に変更
+    // 初回起動時のデフォルトを「左配置 'left'」に変更
     let savedPos = 'left';
     try {
         savedPos = localStorage.getItem('marumine_btn_pos') || 'left';
     } catch(e) {}
     applyButtonPosition(savedPos);
     
-    // 起動時に世界の最高得点を一度ロード
+    // クラウドから世界の最高1位を引っ張ってきてトップ画面に反映
     loadGlobalRanking(true);
 });
 
@@ -105,17 +105,24 @@ rankingOpenBtn.addEventListener('click', () => {
 });
 rankingCloseBtn.addEventListener('click', () => rankingModal.style.display = 'none');
 
-// 🌍 オンラインランキングロード
+// 🌍 Firebaseから別端末共通の最新ランキングデータを取得
 async function loadGlobalRanking(isOnlyTopHUD = false) {
     if (!isOnlyTopHUD) {
         rankingList.innerHTML = '<li>読み込み中...</li>';
     }
     try {
-        const res = await fetch(API_URL + "/latest", {
-            headers: { "X-Master-Key": MASTER_KEY }
-        });
-        const data = await res.json();
-        const ranking = data.record.ranking || [];
+        const res = await fetch(BASE_DB_URL);
+        const ranking = await res.json() || [];
+
+        // スコア順に確実に並び替え
+        ranking.sort((a, b) => b.score - a.score);
+
+        // 世界の最高得点をトップ画面の「GLOBAL HI-SCORE」にセット
+        if (ranking.length > 0) {
+            resHiScore.textContent = ranking[0].score;
+        } else {
+            resHiScore.textContent = "0";
+        }
 
         if (!isOnlyTopHUD) {
             rankingList.innerHTML = '';
@@ -154,6 +161,7 @@ function showTopMenu() {
     topHiScoreWrap.style.display = 'block';
     menuSettings.style.display = 'block';
     startBtn.textContent = "START";
+    loadGlobalRanking(true); // メニューに戻った時も世界ランキングを自動再ロード
 }
 
 attackBtn.addEventListener('pointerdown', (e) => {
@@ -203,7 +211,7 @@ function initGame() {
     isInvincible = false;
     
     scoreDisplay.textContent = score;
-    // 自端末の隔離ローカルハイスコアを表示
+    // 自端末の隔離ローカルハイスコアを確実にゲーム画面に表示
     hudHiScoreDisplay.textContent = hiScore;
     updateLifeDisplay();
     overlay.style.display = 'none';
@@ -355,7 +363,7 @@ function gameLoop() {
             if (destroyedCount > 0) {
                 score += 10;
                 scoreDisplay.textContent = score;
-                // 自端末の最高得点をリアルタイムで上回った場合、HUDも更新
+                // 自端末の記録を塗り替えた場合はリアルタイムにHUDも更新
                 if (score > hiScore) {
                     hiScore = score;
                     hudHiScoreDisplay.textContent = hiScore;
@@ -437,6 +445,7 @@ function updateLifeDisplay() {
     lifeDisplay.textContent = '❤️'.repeat(Math.max(0, life));
 }
 
+// プレイヤー（円）と障害物（四角）の判定
 function checkCollision(pEl, oEl) {
     const pRect = pEl.getBoundingClientRect();
     const oRect = oEl.getBoundingClientRect();
@@ -466,7 +475,7 @@ function checkBallCollision(bEl, oEl) {
     );
 }
 
-// 🌍 オンラインサーバーへ「今回のスコア」を送信する処理
+// 🌍 Firebaseのあなた専用データベースへスコアを送信する最新処理
 sendScoreBtn.addEventListener('click', async () => {
     const name = playerNameInput.value.trim();
     if (!name) {
@@ -478,24 +487,20 @@ sendScoreBtn.addEventListener('click', async () => {
     sendScoreBtn.textContent = "送信中...";
 
     try {
-        const getRes = await fetch(API_URL + "/latest", {
-            headers: { "X-Master-Key": MASTER_KEY }
-        });
-        const getData = await getRes.json();
-        let ranking = getData.record.ranking || [];
+        // 1. あなたのFirebaseから最新のランキングを取得
+        const getRes = await fetch(BASE_DB_URL);
+        let ranking = await getRes.json() || [];
 
+        // 2. 今回のスコアをリストに追加して上位5位に並び替える
         ranking.push({ name: name, score: score });
         ranking.sort((a, b) => b.score - a.score);
         ranking = ranking.slice(0, 5);
 
-        const putRes = await fetch(API_URL, {
+        // 3. あなたのFirebaseサーバーへデータを上書き送信
+        const putRes = await fetch(BASE_DB_URL, {
             method: "PUT",
-            mode: "cors", // ★重要：GitHub PagesからのCORSブロックを回避する呪文
-            headers: {
-                "Content-Type": "application/json",
-                "X-Master-Key": MASTER_KEY
-            },
-            body: JSON.stringify({ ranking: ranking })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(ranking)
         });
 
         if (putRes.ok) {
@@ -506,19 +511,20 @@ sendScoreBtn.addEventListener('click', async () => {
             throw new Error();
         }
     } catch (err) {
-        alert("ただいま通信が混み合っています。少し待ってからもう一度送信を押してください。");
+        alert("送信に失敗しました。Realtime Databaseのルールを確認してください。");
         sendScoreBtn.disabled = false;
         sendScoreBtn.textContent = "送信";
     }
 });
 
+// 🎯 ゲームオーバー処理
 function gameOver() {
     isPlaying = false;
     isPaused = false;
     cancelAnimationFrame(animationFrameId);
     clearTimeout(spawnTimeoutId);
 
-    // 自端末の隔離ローカルハイスコアを保護セーブ
+    // 自端末ハイスコア（ローカル保存）の保護セーブ
     if (score > hiScore) {
         hiScore = score;
     }
@@ -535,12 +541,12 @@ function gameOver() {
     setTimeout(() => {
         gameTitle.textContent = "GAME OVER";
         
-        // 📊 今回のスコアと、隔離された自端末ハイスコアを正確に同時表示！
+        // 📊「今回のスコア」と「自端末のハイスコア」をバグなしで両方表示！
         resScore.textContent = score;
-        resHiScore.textContent = hiScore;
+        resBestScore.textContent = hiScore;
         
         topHiScoreWrap.style.display = 'none'; 
-        gameoverScores.style.display = 'block'; // 確実に「YOUR SCORE」と「HI-SCORE」が並びます
+        gameoverScores.style.display = 'block'; // 確実に両方画面に並びます
         resultContainer.style.display = 'block';
         menuSettings.style.display = 'none';
 
