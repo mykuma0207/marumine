@@ -233,54 +233,56 @@ body {
 #ranking-list li:nth-child(2) { color: #cccccc; }
 #ranking-list li:nth-child(3) { color: #cd7f32; }
 
-.invincible { animation: blink 0.1s linear infinite; }
-@keyframes blink {
-    0% { opacity: 0.3; }
-    50% { opacity: 1; }
-    100% { opacity: 0.3; }
-}
-
-/* 🛠️【完全修正】 overlay全体の構造を absolute（絶対配置の塊）に変更 */
-#overlay {
+/* 🛠️【完全修正】メニュー共通の絶対座標固定スタイル */
+.overlay-screen {
     position: absolute;
     top: 0; left: 0; width: 100vw; height: 100dvh;
-    background: rgba(0,0,0,0.8);
-    display: block;
+    background: rgba(0,0,0,0.82);
     z-index: 20;
+    text-align: center;
     overflow: hidden;
 }
 
-/* 各パーツを上からの「%固定位置」で強制的に配置し、重なりと押し下げを完全防御 */
-#game-title {
+.screen-title {
     position: absolute;
     top: 10%;
     left: 0; width: 100%;
     font-size: 26px;
     letter-spacing: 1px;
     color: #ffcc00;
-    text-align: center;
 }
+.text-red { color: #ff3366 !important; }
 
-#result-container {
+.score-display-box {
     position: absolute;
     top: 26%;
     left: 0; width: 100%;
     font-size: 16px;
     font-weight: bold;
-    text-align: center;
-    line-height: 1.3;
+    line-height: 1.4;
 }
 #res-score { color: #fff; font-size: 20px; }
-#res-best-score { color: #00ffcc; font-size: 20px; }
-#res-hi-score { color: #ff3366; font-size: 22px; }
-#top-hi-score-wrap { color: #ffcc00; }
+.text-teal { color: #00ffcc !important; }
+#res-best-score { font-size: 20px; }
+#res-hi-score { color: #ffcc00; font-size: 22px; }
 
-/* 🛠️ ゲームオーバー用のスコア並びを強制ブロック化 */
-#gameover-scores p {
-    display: block !important;
-    margin: 2px 0;
+/* トップ専用の設定ボックス */
+.settings-box {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background: rgba(255,255,255,0.08);
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    width: 85%;
+    max-width: 380px;
 }
+.settings-box p { font-size: 11px; margin-bottom: 4px; color: #ccc; }
 
+/* ゲームオーバー専用の送信ボックス */
 #send-score-container {
     position: absolute;
     top: 45%;
@@ -291,11 +293,11 @@ body {
     padding: 6px 15px;
     border-radius: 8px;
     text-align: center;
-    z-index: 22;
     width: 85%;
     max-width: 380px;
 }
 #send-score-container p { font-size: 11px; font-weight: bold; color: #ff3366; margin-bottom: 4px; }
+
 .input-row { display: flex; gap: 8px; justify-content: center; }
 #player-name-input {
     padding: 4px 10px; font-size: 13px; border-radius: 4px; border: 1px solid #666; background: #333; color: #fff; width: 120px; text-align: center;
@@ -305,32 +307,6 @@ body {
     padding: 4px 12px; font-size: 12px; font-weight: bold; background: #ff3366; color: #fff; border: none; border-radius: 4px; cursor: pointer;
 }
 
-#menu-settings {
-    position: absolute;
-    top: 46%; /* 送信欄がない通常時はここ、ある時は送信欄の裏に隠れるのを防ぐため、送信欄と高さを調整 */
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    background: rgba(255,255,255,0.08);
-    padding: 6px 15px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.1);
-    width: 85%;
-    max-width: 380px;
-}
-/* ゲームオーバー時は、設定欄を少し下に下げて送信欄と被るのを防ぐ自動クラス */
-#overlay:has(#send-score-container[style*="display: block"]) #menu-settings {
-    top: 68% !important;
-}
-#overlay:has(#send-score-container[style*="display: inline-block"]) #menu-settings {
-    top: 68% !important;
-}
-
-#menu-settings p {
-    font-size: 11px;
-    margin-bottom: 4px;
-    color: #ccc;
-}
 .setting-row { margin-bottom: 4px; }
 .setting-row button {
     padding: 3px 12px; margin: 0 3px; font-size: 11px; font-weight: bold;
@@ -345,10 +321,10 @@ body {
 }
 #ranking-open-btn { color: #ffcc00; }
 
-/* STARTボタンを最下部に固定配置（埋まりを完全回避） */
-#start-btn {
+/* 決定版：絶対に埋もれない位置に固定されたメインボタン */
+#start-btn, #back-to-top-btn {
     position: absolute;
-    bottom: 8%;
+    bottom: 12%;
     left: 50%;
     transform: translateX(-50%);
     padding: 6px 45px;
@@ -360,8 +336,4 @@ body {
     background-color: #fff;
     color: #111;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
-/* ゲームオーバー時（BACK TO TOPボタン時）も位置を少し自動調整 */
-#overlay:has(#send-score-container[style*="display: block"]) #start-btn {
-    bottom: 4%;
 }
