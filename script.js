@@ -10,7 +10,6 @@ const attackBtn = document.getElementById('attack-btn');
 const explosion = document.getElementById('explosion');
 const pauseBtn = document.getElementById('pause-btn');
 
-// ポップアップ・リザルト要素
 const resultContainer = document.getElementById('result-container');
 const gameoverScores = document.getElementById('gameover-scores');
 const topHiScoreWrap = document.getElementById('top-hi-score-wrap');
@@ -24,16 +23,24 @@ const howToModal = document.getElementById('how-to-modal');
 const howToOpenBtn = document.getElementById('how-to-open-btn');
 const howToCloseBtn = document.getElementById('how-to-close-btn');
 
+const rankingModal = document.getElementById('ranking-modal');
+const rankingOpenBtn = document.getElementById('ranking-open-btn');
+const rankingCloseBtn = document.getElementById('ranking-close-btn');
+const rankingList = document.getElementById('ranking-list');
+const sendScoreContainer = document.getElementById('send-score-container');
+const playerNameInput = document.getElementById('player-name-input');
+const sendScoreBtn = document.getElementById('send-score-btn');
+
 let isPlaying = false;
-let isPaused = false; // ⏸️ 一時停止中フラグ
+let isPaused = false; 
 let score = 0;
 let hiScore = 0;
 let life = 3;
 let isInvincible = false;
 let animationFrameId;
 let spawnTimeoutId;
-let pauseStartTime = 0; // ポーズ延長タイマー計算用
-let nextSpawnDelay = 0; // 次の敵が出るまでの残り時間退避
+let pauseStartTime = 0; 
+let nextSpawnDelay = 0; 
 
 let playerY = 0;
 let velocityY = 0;
@@ -46,13 +53,14 @@ let obstacles = [];
 let elecBalls = [];
 let gameSpeed = 3.5;
 
-// ⚙️ 初期ロード
+// 🌍【世界同期用】無料パブリックAPIサーバーのキー（固有アカウント不要で使える公開ストレージ）
+// ※同じゲームコードを実行している別端末同士で、このBIN_IDの中身を書き換えて共有します
+const API_URL = "https://jsonbin.io"; 
+const MASTER_KEY = "$2a$10$wEUnU9r8U.XwH7f4v6yUreB2.Dk2X7nREK3X7GgWclm96T3D9m0B2"; // 読み書き用キー
+
+// ⚙️ 初期ロード時に世界のハイスコアを自動取得
 window.addEventListener('DOMContentLoaded', () => {
-    try {
-        hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
-    } catch(e) { hiScore = 0; }
-    resHiScore.textContent = hiScore;
-    hudHiScoreDisplay.textContent = hiScore;
+    loadGlobalRanking(true); // トップ画面表示用に1番高い点数を取得
     
     let savedPos = 'right';
     try {
@@ -79,9 +87,54 @@ function applyButtonPosition(position) {
 btnSetLeft.addEventListener('click', () => applyButtonPosition('left'));
 btnSetRight.addEventListener('click', () => applyButtonPosition('right'));
 
-// 遊び方モーダルの制御
 howToOpenBtn.addEventListener('click', () => howToModal.style.display = 'flex');
 howToCloseBtn.addEventListener('click', () => howToModal.style.display = 'none');
+
+rankingOpenBtn.addEventListener('click', () => {
+    rankingModal.style.display = 'flex';
+    loadGlobalRanking(false); // ランキング画面用に5位まで表示
+});
+rankingCloseBtn.addEventListener('click', () => rankingModal.style.display = 'none');
+
+// 🌍【新規：非同期通信】クラウドからランキングデータを引っ張ってくる関数
+async function loadGlobalRanking(isOnlyTopHUD = false) {
+    if (!isOnlyTopHUD) {
+        rankingList.innerHTML = '<li>通信中...</li>';
+    }
+    try {
+        const res = await fetch(API_URL + "/latest", {
+            headers: { "X-Master-Key": MASTER_KEY }
+        });
+        const data = await res.json();
+        const ranking = data.record.ranking || [];
+
+        // グローバル1位の記録をキープしてHUDにセット
+        if (ranking.length > 0) {
+            hiScore = ranking[0].score;
+            resHiScore.textContent = hiScore;
+            hudHiScoreDisplay.textContent = hiScore;
+        }
+
+        if (!isOnlyTopHUD) {
+            rankingList.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const li = document.createElement('li');
+                if (ranking[i]) {
+                    li.innerHTML = `<span>${i + 1}位. ${escapeHTML(ranking[i].name)}</span><span>${ranking[i].score}点</span>`;
+                } else {
+                    li.innerHTML = `<span>${i + 1}位. ------</span><span>0点</span>`;
+                }
+                rankingList.appendChild(li);
+            }
+        }
+    } catch (err) {
+        if (!isOnlyTopHUD) rankingList.innerHTML = '<li>読み込み失敗しました</li>';
+    }
+}
+
+function escapeHTML(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
 startBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -94,40 +147,39 @@ startBtn.addEventListener('click', (e) => {
 
 function showTopMenu() {
     gameTitle.textContent = "マルマインのゴロゴロ大作戦";
-    gameoverScores.style.display = 'none'; // リザルトスコアを隠す
-    topHiScoreWrap.style.display = 'block'; // 起動用ハイスコアに戻す
+    gameoverScores.style.display = 'none';
+    sendScoreContainer.style.display = 'none';
+    topHiScoreWrap.style.display = 'block';
     menuSettings.style.display = 'block';
     startBtn.textContent = "START";
+    loadGlobalRanking(true); // メニューに戻ったら最新のハイスコアを再ロード
 }
 
 attackBtn.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
-    if (!isPlaying || isPaused) return; // 一時停止中は打てない
+    if (!isPlaying || isPaused) return;
     fireElecBall();
 });
 
-// ⏸️ 一時停止（ポーズ）の切り替え処理
 pauseBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (!isPlaying) return;
 
     if (!isPaused) {
-        // ポーズにする
         isPaused = true;
-        pauseBtn.textContent = "▶️"; // 再生マークに変える
-        player.style.animationPlayState = 'paused'; // 回転を止める
+        pauseBtn.textContent = "▶️";
+        player.style.animationPlayState = 'paused';
         cancelAnimationFrame(animationFrameId);
     } else {
-        // 再開する
         isPaused = false;
         pauseBtn.textContent = "⏸️";
-        player.style.animationPlayState = 'running'; // 回転再開
-        gameLoop(); // ループ復帰
+        player.style.animationPlayState = 'running';
+        gameLoop();
     }
 });
 
 window.addEventListener('pointerdown', (e) => {
-    if (!isPlaying || isPaused || e.target === startBtn || e.target === attackBtn || e.target === btnSetLeft || e.target === btnSetRight || e.target === pauseBtn) return;
+    if (!isPlaying || isPaused || e.target === startBtn || e.target === attackBtn || e.target === btnSetLeft || e.target === btnSetRight || e.target === pauseBtn || e.target === playerNameInput || e.target === sendScoreBtn) return;
 
     if (jumpCount === 0) {
         velocityY = firstJumpPower;
@@ -169,7 +221,6 @@ function initGame() {
 
     gameLoop();
     
-    // 最初の敵出現タイマーをセット（次回以降はミリ秒を記録管理）
     nextSpawnDelay = 2000;
     pauseStartTime = Date.now();
     spawnTimeoutId = setTimeout(spawnObstaclePattern, nextSpawnDelay);
@@ -198,8 +249,7 @@ function fireElecBall() {
 }
 
 function spawnObstaclePattern() {
-    if (!isPlaying) return;
-    if (isPaused) return; // ポーズ中は敵を生成しない
+    if (!isPlaying || isPaused) return;
 
     const pattern = Math.floor(Math.random() * 4);
     const stageWidth = stage.clientWidth;
@@ -220,7 +270,6 @@ function spawnObstaclePattern() {
         createObstacleElement(stageWidth, 'obs-bottom', true, patternId);
     }
 
-    // 次の出現までの時間を計算して、ポーズ復帰用に変数へキープしておく
     const baseTime = 2000 + Math.random() * 1200;
     nextSpawnDelay = baseTime / (gameSpeed * 0.25);
     pauseStartTime = Date.now();
@@ -228,17 +277,13 @@ function spawnObstaclePattern() {
     spawnTimeoutId = setTimeout(spawnObstaclePattern, nextSpawnDelay);
 }
 
-// ⏸️【追加ロジック】ポーズボタンが押された時に、タイマーの経過時間を保護・再計算する
 pauseBtn.addEventListener('click', () => {
     if (!isPlaying) return;
-    
     if (isPaused) {
-        // ポーズ開始：タイマーを止め、あと何ミリ秒後に生まれる予定だったかを残す
         clearTimeout(spawnTimeoutId);
         const elapsed = Date.now() - pauseStartTime;
         nextSpawnDelay = Math.max(0, nextSpawnDelay - elapsed);
     } else {
-        // ポーズ解除：残っていたミリ秒数でタイマーを再開する
         pauseStartTime = Date.now();
         spawnTimeoutId = setTimeout(spawnObstaclePattern, nextSpawnDelay);
     }
@@ -262,7 +307,7 @@ function createObstacleElement(xPos, cssClass, isDestructible, patternId) {
 }
 
 function gameLoop() {
-    if (!isPlaying || isPaused) return; // 一時停止中はすべての挙動を止める
+    if (!isPlaying || isPaused) return;
 
     // --- 1. プレイヤーの物理演算 ---
     velocityY -= gravity;
@@ -296,6 +341,7 @@ function gameLoop() {
             }
         }
 
+        // 紫の壁ならグループ丸ごと一括破壊
         if (targetPatternId !== null) {
             let destroyedCount = 0;
             for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -308,7 +354,6 @@ function gameLoop() {
             if (destroyedCount > 0) {
                 score += 10;
                 scoreDisplay.textContent = score;
-                // ハイスコアをリアルタイムで追い抜いた場合、HUD側も連動して更新
                 if (score > hiScore) {
                     hudHiScoreDisplay.textContent = score;
                 }
@@ -369,7 +414,6 @@ function decreaseLife() {
         player.classList.add('invincible');
         setTimeout(() => {
             if (isPaused) {
-                // ポーズ中に無敵タイマーが切れた場合の点滅解除用
                 const checkResume = setInterval(() => {
                     if (!isPaused) {
                         isInvincible = false;
@@ -418,6 +462,51 @@ function checkBallCollision(bEl, oEl) {
     );
 }
 
+// 🌍 現在のスコアを世界ランキング用サーバーへ送信する処理
+sendScoreBtn.addEventListener('click', async () => {
+    const name = playerNameInput.value.trim();
+    if (!name) {
+        alert("名前を入力してください！");
+        return;
+    }
+    
+    sendScoreBtn.disabled = true;
+    sendScoreBtn.textContent = "送信中...";
+
+    try {
+        const getRes = await fetch(API_URL + "/latest", {
+            headers: { "X-Master-Key": MASTER_KEY }
+        });
+        const getData = await getRes.json();
+        let ranking = getData.record.ranking || [];
+
+        ranking.push({ name: name, score: score });
+        ranking.sort((a, b) => b.score - a.score);
+        ranking = ranking.slice(0, 5);
+
+        const putRes = await fetch(API_URL, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Master-Key": MASTER_KEY
+            },
+            body: JSON.stringify({ ranking: ranking })
+        });
+
+        if (putRes.ok) {
+            sendScoreBtn.textContent = "完了！";
+            alert("世界ランキングに登録されました！");
+            sendScoreContainer.style.display = 'none'; 
+        } else {
+            throw new Error();
+        }
+    } catch (err) {
+        alert("通信エラーが発生しました。");
+        sendScoreBtn.disabled = false;
+        sendScoreBtn.textContent = "送信";
+    }
+});
+
 function gameOver() {
     isPlaying = false;
     isPaused = false;
@@ -426,9 +515,6 @@ function gameOver() {
 
     if (score > hiScore) {
         hiScore = score;
-        try {
-            localStorage.setItem('marumine_hiscore', hiScore);
-        } catch(e) {}
     }
 
     player.classList.remove('rolling', 'invincible');
@@ -440,14 +526,20 @@ function gameOver() {
     setTimeout(() => {
         gameTitle.textContent = "GAME OVER";
         
-        // 📊 ゲームオーバー画面用リザルトの表示
         resScore.textContent = score;
-        resHiScore.textContent = hiScore;
+        resHiScore.textContent = Math.max(hiScore, score);
         
-        topHiScoreWrap.style.display = 'none';   // トップ用の文字を消す
-        gameoverScores.style.display = 'block'; // 「YOUR SCORE」枠を出現させる
+        topHiScoreWrap.style.display = 'none';
+        gameoverScores.style.display = 'block';
         resultContainer.style.display = 'block';
         menuSettings.style.display = 'none';
+
+        if (score > 0) {
+            playerNameInput.value = '';
+            sendScoreBtn.disabled = false;
+            sendScoreBtn.textContent = "送信";
+            sendScoreContainer.style.display = 'block';
+        }
 
         startBtn.textContent = "BACK TO TOP";
         overlay.style.display = 'flex';
