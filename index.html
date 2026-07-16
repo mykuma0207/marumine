@@ -31,6 +31,7 @@
             <div id="explosion">💥</div>
         </div>
 
+        <!-- スマホ用エレキボール発射ボタン -->
         <button id="attack-btn" class="pos-top-left">エレキボール</button>
 
         <!-- 遊び方説明ポップアップ -->
@@ -38,7 +39,7 @@
             <div class="modal-content">
                 <h2>📖 遊び方説明</h2>
                 <div class="modal-inner-text">
-                    <p><strong>【画面の左（または右）をタップ】</strong><br>通常ジャンプ / 空中でさらにもう一回タップで2段ジャンプ！</p>
+                    <p><strong>【画面の左（または右）をタップ】</strong><br>通常ジャンプ / 空中でさらもう一回タップで2段ジャンプ！</p>
                     <p><strong>【「エレキボール」ボタンをタップ】</strong><br>上・中・下すべてが塞がった紫の壁を、一撃で吹き飛ばすぞ！</p>
                 </div>
                 <button id="how-to-close-btn" class="modal-close-btn">閉じる</button>
@@ -61,11 +62,10 @@
             <h1 id="game-title">マルマインのゴロゴロ大作戦</h1>
             
             <div id="result-container">
-                <!-- 🛠️【①修正】グローバルではなく、自端末のハイスコア表示に変更 -->
                 <p id="top-hi-score-wrap">HI-SCORE: <span id="res-hi-score">0</span></p>
                 <div id="gameover-scores" style="display: none;">
                     <p>YOUR SCORE: <span id="res-score">0</span></p>
-                    <p>HI-SCORE: <span id="res-best-score">0</span></p>
+                    <p>BEST SCORE: <span id="res-best-score">0</span></p>
                 </div>
             </div>
 
@@ -80,10 +80,8 @@
 
             <!-- トップ画面の設定・追加ボタン欄 -->
             <div id="menu-settings">
-                <!-- 🛠️【③修正】文言を「攻撃ボタンの位置設定」に変更 -->
                 <p>【 攻撃ボタンの位置設定 】</p>
                 <div class="setting-row">
-                    <!-- 🛠️【②修正】文言を「左側」「右側」に変更 -->
                     <button id="btn-set-left" class="active">左側</button>
                     <button id="btn-set-right">右側</button>
                 </div>
