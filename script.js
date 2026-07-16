@@ -474,7 +474,6 @@ sendScoreBtn.addEventListener('click', async () => {
         const rawData = await getRes.json();
         let ranking = Array.isArray(rawData) ? rawData : [];
 
-        // 今回スコアとハイスコアを自動判定し、高い方を送信データにする
         const finalSubmitScore = Math.max(score, hiScore);
         ranking.push({ name: name, score: finalSubmitScore });
         
@@ -502,7 +501,7 @@ sendScoreBtn.addEventListener('click', async () => {
             sendScoreBtn.textContent = "完了！";
             alert("世界ランキングに登録されました！");
             
-            // 🎯【修正】送信完了後は送信コンテナだけを非表示にし、ゲームオーバーメニューは壊さない
+            // 🎯 エラーの引き金になるremove()を完全に廃止し、安全に非表示ロック
             sendScoreContainer.style.display = 'none'; 
         } else {
             throw new Error();
@@ -520,7 +519,6 @@ function gameOver() {
     cancelAnimationFrame(animationFrameId);
     clearTimeout(spawnTimeoutId);
 
-    // 自端末ハイスコア（ローカル保存）の保護セーブ
     if (score > hiScore) {
         hiScore = score;
     }
@@ -535,9 +533,10 @@ function gameOver() {
     explosion.classList.add('boom');
 
     setTimeout(() => {
-        // 📊【完全バグ修正】ゲームオーバー専用の部屋だけをピンポイントで出現させる！
-        titleMenu.style.display = 'none';     // トップメニュー部屋は確実に隠す
-        gameoverMenu.style.display = 'block'; // ゲームオーバー専用部屋を展開！
+        // 🎯【完全修正】読み込みエラーの原因だった「ボタンのHTML再生成（callee）」をすべて削除！
+        // HTML側であらかじめ用意したそれぞれの部屋を切り替えるため、絶対にフリーズしません
+        titleMenu.style.display = 'none';     
+        gameoverMenu.style.display = 'block'; 
         
         resScore.textContent = score;
         resBestScore.textContent = hiScore;
@@ -553,7 +552,7 @@ function gameOver() {
 
             sendScoreBtn.disabled = false;
             sendScoreBtn.textContent = "送信";
-            sendScoreContainer.style.display = 'block'; // 隠れていた送信枠をリセット表示
+            sendScoreContainer.style.display = 'block'; 
         }
     }, 1000);
 }
