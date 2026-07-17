@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        <!-- 🪟 メインメニュー（Flexboxによる完全一括管理ボックス） -->
+        <!-- 🪟 メメインメニュー（Flexboxによる完全一括管理ボックス） -->
         <div id="title-menu" class="overlay-screen">
             <div id="menu-content-wrapper">
                 <h1 class="screen-title">マルマインのゴロゴロ大作戦</h1>
@@ -73,7 +73,7 @@
                     </div>
                 </div>
 
-                <!-- 🟢 誤タップ防止：左右の端に完全に分離させたサブボタンエリア -->
+                <!-- 誤タップ防止：左右の端に完全に分離させたサブボタンエリア -->
                 <div class="menu-sub-btns-wide">
                     <button id="how-to-open-btn">📖 遊び方</button>
                     <button id="ranking-open-btn">🏆 ランキング</button>
@@ -83,21 +83,26 @@
             </div>
         </div>
 
-        <!-- 🪟 ゲームオーバー画面専用の部屋（初期状態は非表示） -->
+        <!-- 🪟 ゲームオーバー画面専用の部屋（🟢ここもFlexbox縦一列管理に大リメイク！） -->
         <div id="gameover-menu" class="overlay-screen" style="display: none;">
-            <h1 class="screen-title text-red">GAME OVER</h1>
-            <div class="score-display-box">
-                <p>YOUR SCORE: <span id="res-score">0</span></p>
-                <p class="text-teal">BEST SCORE: <span id="res-best-score">0</span></p>
-            </div>
-            <div id="send-score-container">
-                <p>世界ランキングに登録しよう！</p>
-                <div class="input-row">
-                    <input type="text" id="player-name-input" maxlength="5" placeholder="なまえ(5文字)">
-                    <button id="send-score-btn">送信</button>
+            <div id="gameover-content-wrapper">
+                <h1 class="screen-title text-red">GAME OVER</h1>
+                
+                <div class="score-display-box">
+                    <p>YOUR SCORE: <span id="res-score">0</span></p>
+                    <p class="text-teal">BEST SCORE: <span id="res-best-score">0</span></p>
                 </div>
+                
+                <div id="send-score-container">
+                    <p>世界ランキングに登録しよう！</p>
+                    <div class="input-row">
+                        <input type="text" id="player-name-input" maxlength="5" placeholder="なまえ(5文字)">
+                        <button id="send-score-btn">送信</button>
+                    </div>
+                </div>
+                
+                <button id="back-to-top-btn">BACK TO TOP</button>
             </div>
-            <button id="back-to-top-btn">BACK TO TOP</button>
         </div>
     </div>
     <script src="script.js"></script>
