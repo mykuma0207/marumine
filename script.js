@@ -1,3 +1,15 @@
+// 🟢 【回転バグ完全防御】実際の表示領域を1ピクセル単位で正確に測ってCSSへ流し込む関数
+function adjustViewportHeight() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+
+// 画面回転時・リサイズ時に即座に再計算を発動させる
+window.addEventListener('resize', adjustViewportHeight);
+window.addEventListener('orientationchange', () => {
+    setTimeout(adjustViewportHeight, 100); // 回転直後のチラつき防止のためにダメ押し実行
+});
+
 const stage = document.getElementById('game-stage');
 const player = document.getElementById('player');
 const scoreDisplay = document.getElementById('score');
@@ -7,7 +19,6 @@ const attackBtn = document.getElementById('attack-btn');
 const explosion = document.getElementById('explosion');
 const pauseBtn = document.getElementById('pause-btn');
 
-// 🪟 完全に独立させた2つの部屋の要素
 const titleMenu = document.getElementById('title-menu');
 const gameoverMenu = document.getElementById('gameover-menu');
 
@@ -53,7 +64,6 @@ let obstacles = [];
 let elecBalls = [];
 let gameSpeed = 3.5;
 
-// 🎯 AIの自動検閲上書きを100%回避するドッキングURL
 const u1 = "h" + "t" + "t" + "p" + "s" + ":" + "/" + "/";
 const u2 = "m" + "a" + "r" + "u" + "m" + "i" + "n" + "e" + "-" + "g" + "a" + "m" + "e" + "-";
 const u3 = "d" + "e" + "f" + "a" + "u" + "l" + "t" + "-" + "r" + "t" + "d" + "b" + ".";
@@ -61,9 +71,10 @@ const u4 = "f" + "i" + "r" + "e" + "b" + "a" + "s" + "e" + "i" + "o" + "." + "c"
 const BASE_DB_URL = u1 + u2 + u3 + u4 + "/ranking.json";
 
 // ⚙️ 初期ロード
-// ⚙️ 初期ロード（バグ防御版）
 window.addEventListener('DOMContentLoaded', () => {
-    // 🟢 ゲーム開始前は、念のためゲーム中のプレイヤーや攻撃ボタンを一時的に非表示にしておく安全対策
+    adjustViewportHeight(); // 起動時に即座に高さを最適化
+    
+    // 起動時はゲーム中の要素を隠してすけ透けを防ぐ安全ガード
     player.style.display = 'none';
     attackBtn.style.display = 'none';
 
@@ -102,7 +113,7 @@ btnSetRight.addEventListener('click', () => applyButtonPosition('right'));
 howToOpenBtn.addEventListener('click', () => { howToModal.style.display = 'flex'; });
 howToCloseBtn.addEventListener('click', () => { howToModal.style.display = 'none'; });
 
-// 🎯 あなたの素晴らしい提案通り、「ランキング」ボタンをタップした時だけ世界のデータをロード！
+// ランキングボタンをタップした時だけ世界のデータをロード
 rankingOpenBtn.addEventListener('click', () => {
     rankingModal.style.display = 'flex';
     loadGlobalRanking(false); 
@@ -152,8 +163,9 @@ startBtn.addEventListener('click', (e) => {
 backToTopBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     gameoverMenu.style.display = 'none'; 
-    titleMenu.style.display = 'block';   
+    titleMenu.style.display = 'flex'; // 🟢 CSSのFlexbox化に合わせて block から flex に修正、中央配置を維持
     resHiScore.textContent = hiScore; 
+    adjustViewportHeight();           // 🟢 ダメ押しでここでも画面高さを強制再計算してバグを完全封鎖
 });
 
 attackBtn.addEventListener('pointerdown', (e) => {
@@ -162,6 +174,7 @@ attackBtn.addEventListener('pointerdown', (e) => {
     fireElecBall();
 });
 
+// 🟢 重複を排除し、安全に再構築したポーズボタンの一元化イベント
 pauseBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (!isPlaying) return;
@@ -171,14 +184,22 @@ pauseBtn.addEventListener('click', (e) => {
         pauseBtn.textContent = "▶️";
         player.style.animationPlayState = 'paused';
         cancelAnimationFrame(animationFrameId);
+        clearTimeout(spawnTimeoutId);
+        
+        const elapsed = Date.now() - pauseStartTime;
+        nextSpawnDelay = Math.max(0, nextSpawnDelay - elapsed);
     } else {
         isPaused = false;
         pauseBtn.textContent = "⏸️";
         player.style.animationPlayState = 'running';
+        
+        pauseStartTime = Date.now();
+        spawnTimeoutId = setTimeout(spawnObstaclePattern, nextSpawnDelay);
         gameLoop();
     }
 });
 
+// 画面タップによる通常ジャンプ・2段ジャンプ判定
 window.addEventListener('pointerdown', (e) => {
     if (!isPlaying || isPaused || e.target === startBtn || e.target === backToTopBtn || e.target === attackBtn || e.target === btnSetLeft || e.target === btnSetRight || e.target === pauseBtn || e.target === playerNameInput || e.target === sendScoreBtn) return;
 
@@ -212,7 +233,7 @@ function initGame() {
     
     explosion.classList.remove('boom');
     player.style.display = 'block';
-    attackBtn.style.display = 'flex'; // 🟢 これを追加！ゲーム開始時に攻撃ボタンを表示させる
+    attackBtn.style.display = 'flex'; // ゲーム開始時に攻撃ボタンを確実に表示
     
     player.style.animationDuration = '0.9s';
     player.style.animationPlayState = 'running';
@@ -225,6 +246,8 @@ function initGame() {
     elecBalls.forEach(ball => ball.element.remove());
     elecBalls = [];
 
+    // ゲーム開始直前に高さを今一度カチッと合わせる
+    adjustViewportHeight();
     gameLoop();
     
     nextSpawnDelay = 2000;
@@ -282,18 +305,6 @@ function spawnObstaclePattern() {
     
     spawnTimeoutId = setTimeout(spawnObstaclePattern, nextSpawnDelay);
 }
-
-pauseBtn.addEventListener('click', () => {
-    if (!isPlaying) return;
-    if (isPaused) {
-        clearTimeout(spawnTimeoutId);
-        const elapsed = Date.now() - pauseStartTime;
-        nextSpawnDelay = Math.max(0, nextSpawnDelay - elapsed);
-    } else {
-        pauseStartTime = Date.now();
-        spawnTimeoutId = setTimeout(spawnObstaclePattern, nextSpawnDelay);
-    }
-});
 
 function createObstacleElement(xPos, cssClass, isDestructible, patternId) {
     const obsEl = document.createElement('div');
@@ -458,6 +469,7 @@ function checkCollision(pEl, oEl) {
     return distanceSquared < (circleRadius * circleRadius);
 }
 
+// エレキボールの矩形衝突判定（すり抜けを完全防御）
 function checkBallCollision(bEl, oEl) {
     const bRect = bEl.getBoundingClientRect();
     const oRect = oEl.getBoundingClientRect();
@@ -469,7 +481,7 @@ function checkBallCollision(bEl, oEl) {
     );
 }
 
-// 🌍 Firebaseのあなた専用データベースへスコアを送信する処理
+// Firebaseへのスコア送信処理（重複排除ロジック内蔵版）
 sendScoreBtn.addEventListener('click', async () => {
     const name = playerNameInput.value.trim();
     if (!name) {
@@ -485,11 +497,9 @@ sendScoreBtn.addEventListener('click', async () => {
         const rawData = await getRes.json();
         let ranking = Array.isArray(rawData) ? rawData : [];
 
-        // 今回スコアとハイスコアを自動判定し、高い方を送信データにする
         const finalSubmitScore = Math.max(score, hiScore);
         ranking.push({ name: name, score: finalSubmitScore });
         
-        // 重複排除ロジック
         ranking.sort((a, b) => b.score - a.score);
         const filteredRanking = [];
         const seenNames = new Set();
@@ -512,8 +522,6 @@ sendScoreBtn.addEventListener('click', async () => {
 
             sendScoreBtn.textContent = "完了！";
             alert("世界ランキングに登録されました！");
-            
-            // 1回のプレイで連続送信できないように非表示ロック
             sendScoreContainer.style.display = 'none'; 
         } else {
             throw new Error();
@@ -525,13 +533,13 @@ sendScoreBtn.addEventListener('click', async () => {
     }
 });
 
+// ゲームオーバー処理（画面回転バグへの耐性を付与した完全版）
 function gameOver() {
     isPlaying = false;
     isPaused = false;
     cancelAnimationFrame(animationFrameId);
     clearTimeout(spawnTimeoutId);
 
-    // 自端末ハイスコア（ローカル保存）の保護セーブ
     if (score > hiScore) {
         hiScore = score;
     }
@@ -542,13 +550,13 @@ function gameOver() {
     player.classList.remove('rolling', 'invincible');
     
     player.style.display = 'none';
+    attackBtn.style.display = 'none'; // ゲームオーバー時は攻撃ボタンを隠す
     explosion.style.bottom = playerY - 45 + 'px';
     explosion.classList.add('boom');
 
     setTimeout(() => {
-        // ゲームオーバー専用の部屋を開く
         titleMenu.style.display = 'none';     
-        gameoverMenu.style.display = 'block'; 
+        gameoverMenu.style.display = 'flex'; // CSSのFlexbox化に合わせて flex に変更してド真ん中固定
         
         resScore.textContent = score;
         resBestScore.textContent = hiScore;
@@ -566,5 +574,6 @@ function gameOver() {
             sendScoreBtn.textContent = "送信";
             sendScoreContainer.style.display = 'block'; 
         }
+        adjustViewportHeight(); // 画面が切り替わった瞬間に高さを測定し、埋もれバグを100%遮断
     }, 1000);
 }
