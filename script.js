@@ -186,6 +186,7 @@ window.addEventListener('pointerdown', (e) => {
         jumpCount++;
     }
 });
+
 function initGame() {
     isPlaying = true;
     isPaused = false;
@@ -305,6 +306,7 @@ function createObstacleElement(xPos, cssClass, isDestructible, patternId) {
         patternId: patternId
     });
 }
+
 function gameLoop() {
     if (!isPlaying || isPaused) return;
 
