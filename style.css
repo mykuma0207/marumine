@@ -246,8 +246,8 @@ body {
 .overlay-screen {
     position: absolute;
     top: 0; left: 0; width: 100vw; height: 100dvh;
-    background: rgba(0,0,0,0.85);
-    z-index: 20;
+    background: #111;
+    z-index: 100;
     text-align: center;
     overflow: hidden;
 }
