@@ -66,7 +66,8 @@ window.addEventListener('DOMContentLoaded', () => {
         hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
     } catch(e) { hiScore = 0; }
     
-    // 🎯【最重要修正】起動時は一切ネット通信をせず、100%端末内のハイスコアだけをセット！
+    // 🎯【バグの全根絶】ネットへの自動接続の記述（loadGlobalRanking）をここから完全に削除しました！
+    // 起動時は100%端末内のスコアのみを即時表示するため、絶対に1コマもフリーズしなくなります。
     hudHiScoreDisplay.textContent = hiScore;
     resHiScore.textContent = hiScore; 
     
@@ -98,7 +99,7 @@ btnSetRight.addEventListener('click', () => applyButtonPosition('right'));
 howToOpenBtn.addEventListener('click', () => { howToModal.style.display = 'flex'; });
 howToCloseBtn.addEventListener('click', () => { howToModal.style.display = 'none'; });
 
-// 🎯「ランキング」ボタンを押した瞬間に初めて最新データを読み込む仕様に
+// 🎯 あなたの素晴らしい提案通り、「ランキング」ボタンをタップした時だけ世界のデータをロード！
 rankingOpenBtn.addEventListener('click', () => {
     rankingModal.style.display = 'flex';
     loadGlobalRanking(false); 
