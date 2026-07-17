@@ -191,7 +191,7 @@ body {
     position: absolute;
     top: 0; left: 0; width: 100vw; height: 100dvh;
     background: rgba(0,0,0,0.85);
-    z-index: 40;
+    z-index: 140; /* 🟢 overlay-screenより手前に出すため140へ引き上げ */
     display: none; 
     justify-content: center;
     align-items: flex-start; 
@@ -205,7 +205,7 @@ body {
     text-align: center;
     border: 2px solid #ffcc00;
     width: 75%; 
-    max-width: 340px; /* さらに少し小さくして見切れを徹底防御 */
+    max-width: 340px; 
     margin-top: 4vh; 
 }
 .modal-content h2 { font-size: 15px; margin-bottom: 6px; color: #ffcc00; }
@@ -242,33 +242,41 @@ body {
     100% { opacity: 0.3; }
 }
 
-/* 🪟 メニュー共通の画面設定（絶対座標による完全固定） */
+/* 🪟 メニュー共通の画面設定（完全固定・裏の透過遮断版） */
 .overlay-screen {
     position: absolute;
     top: 0; left: 0; width: 100vw; height: 100dvh;
-    background: #111;
-    z-index: 100;
-    text-align: center;
-    overflow: hidden;
+    background: #111; /* 🟢 完全な不透明の黒にして裏側のすけ透けを完全に防ぐ */
+    z-index: 100;    /* 🟢 ゲーム中要素を手前に突き抜けさせない鉄壁の数値 */
+    display: flex;
+    justify-content: center;
+    align-items: center; /* 🟢 画面の縦横ど真ん中に内容を集約 */
 }
 
+/* 🟢 メインメニューの縦一列配置を司る中心ラッパー */
+#menu-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px; /* 各パーツの縦の間隔 */
+    width: 90%;
+    max-width: 400px;
+    height: 90%;
+}
+
+/* 🟢 絶対位置(%)を廃止し、文字や箱のサイズをスマホに最適化 */
 .screen-title {
-    position: absolute;
-    top: 10%;
-    left: 0; width: 100%;
-    font-size: 26px;
+    font-size: 24px;
     letter-spacing: 1px;
     color: #ffcc00;
+    margin-bottom: 5px;
 }
 .text-red { color: #ff3366 !important; }
 
 .score-display-box {
-    position: absolute;
-    top: 26%;
-    left: 0; width: 100%;
     font-size: 16px;
     font-weight: bold;
-    line-height: 1.4;
 }
 #res-score { color: #fff; font-size: 20px; }
 .text-teal { color: #00ffcc !important; }
@@ -277,21 +285,52 @@ body {
 
 /* 🛠️ トップ画面専用：攻撃ボタンの位置設定ボックス */
 .settings-box {
-    position: absolute;
-    top: 45%;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
     background: rgba(255,255,255,0.08);
     padding: 8px 18px;
     border-radius: 10px;
     border: 1px solid rgba(255,255,255,0.1);
-    width: 85%;
-    max-width: 380px;
+    width: 100%;
+    text-align: center;
 }
-.settings-box p { font-size: 11px; margin-bottom: 4px; color: #ccc; }
+.settings-box p { font-size: 11px; margin-bottom: 5px; color: #ccc; }
 
-/* 🛠️ ゲームオーバー画面専用：世界ランキング送信ボックス */
+.setting-row { margin-bottom: 4px; }
+.setting-row button {
+    padding: 4px 16px; margin: 0 5px; font-size: 12px; font-weight: bold;
+    background: #444; color: #fff; border: 2px solid #555; border-radius: 5px; cursor: pointer;
+}
+.setting-row button.active {
+    background: #ffcc00; color: #111; border-color: #fff;
+}
+
+/* 🟢 誤タップ防止：完全に左右の両端へ引き離したサブボタン配置 */
+.menu-sub-btns-wide {
+    display: flex;
+    justify-content: space-between; /* 🟢 左右の両端にピッタリ密着 */
+    width: 100%;
+    padding: 0 15px;
+    margin: 4px 0;
+}
+#how-to-open-btn, #ranking-open-btn {
+    background: none; border: none; color: #00ffcc; font-size: 13px; font-weight: bold; cursor: pointer; text-decoration: underline;
+}
+#ranking-open-btn { color: #ffcc00; }
+
+/* 🟢 中央にドンと構える決定版スタートボタン */
+#start-btn, #back-to-top-btn {
+    padding: 8px 50px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 30px;
+    background-color: #fff;
+    color: #111;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    margin-top: 5px;
+}
+
+/* 🛠️ ゲームオーバー画面専用：世界ランキング送信ボックス（後ほど調整用として旧座標を継承） */
 #send-score-container {
     position: absolute;
     top: 45%;
@@ -314,35 +353,4 @@ body {
 }
 #send-score-btn {
     padding: 4px 12px; font-size: 12px; font-weight: bold; background: #ff3366; color: #fff; border: none; border-radius: 4px; cursor: pointer;
-}
-
-.setting-row { margin-bottom: 4px; }
-.setting-row button {
-    padding: 3px 12px; margin: 0 3px; font-size: 11px; font-weight: bold;
-    background: #444; color: #fff; border: 2px solid #555; border-radius: 5px; cursor: pointer;
-}
-.setting-row button.active {
-    background: #ffcc00; color: #111; border-color: #fff;
-}
-.menu-sub-btns { display: flex; gap: 15px; justify-content: center; margin-top: 3px; }
-#how-to-open-btn, #ranking-open-btn {
-    background: none; border: none; color: #00ffcc; font-size: 12px; font-weight: bold; cursor: pointer; text-decoration: underline;
-}
-#ranking-open-btn { color: #ffcc00; }
-
-/* 決定版：絶対に埋もれない位置（下部固定）に計算されたメインボタン */
-#start-btn, #back-to-top-btn {
-    position: absolute;
-    bottom: 14%; /* 12%から14%に少し引き上げ、確実に収まる位置へ */
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 6px 45px;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-    border: none;
-    border-radius: 30px;
-    background-color: #fff;
-    color: #111;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
