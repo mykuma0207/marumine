@@ -6,7 +6,8 @@
 
 html, body {
     width: 100%;
-    height: 100dvh;
+    /* 🟢 JSから送られる正確な高さの100倍（届くまでは1dvhで代用） */
+    height: calc(var(--vh, 1dvh) * 100); 
     overflow: hidden;
     background-color: #111;
     position: fixed;
@@ -22,7 +23,7 @@ body {
 
 #orientation-warning {
     position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100dvh;
+    top: 0; left: 0; width: 100vw; height: calc(var(--vh, 1dvh) * 100);
     background: #222;
     z-index: 999;
     display: flex;
@@ -32,15 +33,12 @@ body {
     font-weight: bold;
 }
 
-/* 🟢 【画面回転バグ完全防御】スマホを横向きにした瞬間に高さを強制リセットする設定 */
 @media (orientation: landscape) {
-    #orientation-warning { 
-        display: none; 
-    }
-
-    /* 横向き時のブラウザの高さバグを破壊し、100%正確な横画面の高さに固定する */
+    #orientation-warning { display: none; }
+    
+    /* 🟢 横向きになった瞬間、すべての画面の高さバグを破壊して強制固定 */
     html, body, #game-container, .overlay-screen {
-        height: 100vh !important; /* dvhのバグをvhと!importantで強制上書き */
+        height: calc(var(--vh, 1dvh) * 100) !important;
     }
 
     /* 縦幅の狭い横画面でも、タイトルや設定ボックス、STARTボタンが絶対に上下にはみ出さないよう自動縮小 */
@@ -58,7 +56,7 @@ body {
 
 #game-container {
     width: 100vw;
-    height: 100dvh;
+    height: calc(var(--vh, 1dvh) * 100);
     position: relative;
     display: flex;
     justify-content: center;
@@ -209,9 +207,9 @@ body {
 /* 📱 ランキング・遊び方画面の背景マスク */
 .modal-mask {
     position: absolute;
-    top: 0; left: 0; width: 100vw; height: 100dvh;
+    top: 0; left: 0; width: 100vw; height: calc(var(--vh, 1dvh) * 100);
     background: rgba(0,0,0,0.85);
-    z-index: 140; /* 🟢 overlay-screenより手前に出すため140へ引き上げ */
+    z-index: 140; /* overlay-screenより手前に出すため140へ引き上げ */
     display: none; 
     justify-content: center;
     align-items: flex-start; 
@@ -265,12 +263,12 @@ body {
 /* 🪟 メニュー共通の画面設定（完全固定・裏の透過遮断版） */
 .overlay-screen {
     position: absolute;
-    top: 0; left: 0; width: 100vw; height: 100dvh;
-    background: #111; /* 🟢 完全な不透明の黒にして裏側のすけ透けを完全に防ぐ */
-    z-index: 100;    /* 🟢 ゲーム中要素を手前に突き抜けさせない鉄壁の数値 */
+    top: 0; left: 0; width: 100vw; height: calc(var(--vh, 1dvh) * 100);
+    background: #111; /* 完全な不透明の黒にして裏側のすけ透けを完全に防ぐ */
+    z-index: 100;    /* ゲーム中要素を手前に突き抜けさせない鉄壁の数値 */
     display: flex;
     justify-content: center;
-    align-items: center; /* 🟢 画面の縦横ど真ん中に内容を集約 */
+    align-items: center; /* 画面の縦横ど真ん中に内容を集約 */
 }
 
 /* 🟢 メインメニューの縦一列配置を司る中心ラッパー */
@@ -285,7 +283,7 @@ body {
     height: 90%;
 }
 
-/* 🟢 絶対位置(%)を廃止し、文字や箱のサイズをスマホに最適化 */
+/* 絶対位置(%)を廃止し、文字や箱のサイズをスマホに最適化 */
 .screen-title {
     font-size: 24px;
     letter-spacing: 1px;
@@ -326,7 +324,7 @@ body {
 /* 🟢 誤タップ防止：完全に左右の両端へ引き離したサブボタン配置 */
 .menu-sub-btns-wide {
     display: flex;
-    justify-content: space-between; /* 🟢 左右の両端にピッタリ密着 */
+    justify-content: space-between; /* 左右の両端にピッタリ密着 */
     width: 100%;
     padding: 0 15px;
     margin: 4px 0;
@@ -336,7 +334,7 @@ body {
 }
 #ranking-open-btn { color: #ffcc00; }
 
-/* 🟢 中央にドンと構える決定版スタートボタン */
+/* 中央にドンと構える決定版スタートボタン */
 #start-btn, #back-to-top-btn {
     padding: 8px 50px;
     font-size: 16px;
@@ -350,7 +348,7 @@ body {
     margin-top: 5px;
 }
 
-/* 🛠️ ゲームオーバー画面専用：世界ランキング送信ボックス（後ほど調整用として旧座標を継承） */
+/* 🛠️ ゲームオーバー画面専用：世界ランキング送信ボックス */
 #send-score-container {
     position: absolute;
     top: 45%;
