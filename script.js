@@ -66,19 +66,15 @@ window.addEventListener('DOMContentLoaded', () => {
         hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
     } catch(e) { hiScore = 0; }
     
-    // 🎯【最重要修正】サーバーとの通信を待たずに、開いた瞬間にスマホ内のハイスコアを1秒で即時セット！
-    // これにより、起動時や更新時にハイスコアが消えたり出なかったりするバグを根元から100%シャットアウトします
-    resHiScore.textContent = hiScore;
+    // 🎯【最重要修正】起動時は一切ネット通信をせず、100%端末内のハイスコアだけをセット！
     hudHiScoreDisplay.textContent = hiScore;
+    resHiScore.textContent = hiScore; 
     
     let savedPos = 'left';
     try {
         savedPos = localStorage.getItem('marumine_btn_pos') || 'left';
     } catch(e) {}
     applyButtonPosition(savedPos);
-
-    // 通信は裏側（バックグラウンド）で安全にのんびり行わせるため、起動を一切邪魔しません
-    loadGlobalRanking(true);
 });
 
 function applyButtonPosition(position) {
@@ -102,6 +98,7 @@ btnSetRight.addEventListener('click', () => applyButtonPosition('right'));
 howToOpenBtn.addEventListener('click', () => { howToModal.style.display = 'flex'; });
 howToCloseBtn.addEventListener('click', () => { howToModal.style.display = 'none'; });
 
+// 🎯「ランキング」ボタンを押した瞬間に初めて最新データを読み込む仕様に
 rankingOpenBtn.addEventListener('click', () => {
     rankingModal.style.display = 'flex';
     loadGlobalRanking(false); 
@@ -114,17 +111,11 @@ async function loadGlobalRanking(isOnlyTopHUD = false) {
         rankingList.innerHTML = '<li>読み込み中...</li>';
     }
     try {
-        // 🎯【修正】タイムアウトを廃止。裏側でのんびり通信を待つので、画面フリーズの原因になりません
         const res = await fetch(BASE_DB_URL);
         const rawData = await res.json();
         const ranking = Array.isArray(rawData) ? rawData : [];
 
         ranking.sort((a, b) => b.score - a.score);
-
-        // 世界の最高得点（データがあればそのスコア、なければ自端末の記録）
-        if (ranking.length > 0 && !isOnlyTopHUD) {
-            // ランキング表示時のみ最新の状態を適用
-        }
 
         if (!isOnlyTopHUD) {
             rankingList.innerHTML = '';
@@ -139,7 +130,6 @@ async function loadGlobalRanking(isOnlyTopHUD = false) {
             }
         }
     } catch (err) {
-        // 通信エラーが起きても画面は既に自端末ハイスコアが出ているので何の影響もなし
         if (!isOnlyTopHUD) rankingList.innerHTML = '<li>通信エラーが発生しました</li>';
     }
 }
@@ -159,8 +149,7 @@ backToTopBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     gameoverMenu.style.display = 'none'; 
     titleMenu.style.display = 'block';   
-    resHiScore.textContent = hiScore; // 戻った時もまずはスマホ内のスコアを即時表示
-    loadGlobalRanking(true); // 裏側で世界データを更新
+    resHiScore.textContent = hiScore; 
 });
 
 attackBtn.addEventListener('pointerdown', (e) => {
@@ -197,7 +186,6 @@ window.addEventListener('pointerdown', (e) => {
         jumpCount++;
     }
 });
-
 function initGame() {
     isPlaying = true;
     isPaused = false;
@@ -213,7 +201,7 @@ function initGame() {
     hudHiScoreDisplay.textContent = hiScore;
     updateLifeDisplay();
     
-    // 🛠️【最重要】完全に分かれた2つの部屋の画面を確実に閉じてステージを開通させる
+    // 🪟 2つの独立した部屋の画面を確実に閉じてゲームを開始する
     titleMenu.style.display = 'none';
     gameoverMenu.style.display = 'none';
     
@@ -317,7 +305,6 @@ function createObstacleElement(xPos, cssClass, isDestructible, patternId) {
         patternId: patternId
     });
 }
-
 function gameLoop() {
     if (!isPlaying || isPaused) return;
 
@@ -491,7 +478,7 @@ sendScoreBtn.addEventListener('click', async () => {
         const rawData = await getRes.json();
         let ranking = Array.isArray(rawData) ? rawData : [];
 
-        // 今回スコアとハイスコアを自動判定し、高い方を送信データにする [INDEX]
+        // 今回スコアとハイスコアを自動判定し、高い方を送信データにする
         const finalSubmitScore = Math.max(score, hiScore);
         ranking.push({ name: name, score: finalSubmitScore });
         
@@ -514,13 +501,12 @@ sendScoreBtn.addEventListener('click', async () => {
         });
 
         if (putRes.ok) {
-            // 送信に成功した名前をスマホ内に自動記憶 [INDEX]
             try { localStorage.setItem('marumine_last_name', name); } catch(e){}
 
             sendScoreBtn.textContent = "完了！";
             alert("世界ランキングに登録されました！");
             
-            // 連続送信・改ざん送信できないようにコンテナを非表示ロック
+            // 1回のプレイで連続送信できないように非表示ロック
             sendScoreContainer.style.display = 'none'; 
         } else {
             throw new Error();
@@ -553,7 +539,7 @@ function gameOver() {
     explosion.classList.add('boom');
 
     setTimeout(() => {
-        // ゲームオーバー専用の独立ルームを最前面に表示
+        // ゲームオーバー専用の部屋を開く
         titleMenu.style.display = 'none';     
         gameoverMenu.style.display = 'block'; 
         
@@ -562,8 +548,6 @@ function gameOver() {
 
         if (score > 0 || hiScore > 0) {
             playerNameInput.value = '';
-            
-            // 過去に保存された「前回の名前」があれば自動入力 [INDEX]
             try {
                 const lastName = localStorage.getItem('marumine_last_name');
                 if (lastName) {
