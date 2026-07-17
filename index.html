@@ -38,7 +38,7 @@
             <div class="modal-content">
                 <h2>📖 遊び方説明</h2>
                 <div class="modal-inner-text">
-                    <p><strong>【画面の左（または右）をタップ】</strong><br>通常ジャンプ / 空中でさらにもう一回タップで2段ジャンプ！</p>
+                    <p><strong>【画面の左（または右）をタップ】</strong><br>通常ジャンプ / 空中でさらもう一回タップで2段ジャンプ！</p>
                     <p><strong>【「エレキボール」ボタンをタップ】</strong><br>上・中・下すべてが塞がった紫の壁を、一撃で吹き飛ばすぞ！</p>
                 </div>
                 <button id="how-to-close-btn" class="modal-close-btn">閉じる</button>
@@ -56,27 +56,34 @@
             </div>
         </div>
 
-        <!-- 🪟【最重要】メインメニュー（初期トップ画面専用の部屋） -->
+        <!-- 🪟 メインメニュー（Flexboxによる完全一括管理ボックス） -->
         <div id="title-menu" class="overlay-screen">
-            <h1 class="screen-title">マルマインのゴロゴロ大作戦</h1>
-            <div class="score-display-box">
-                <p>HI-SCORE: <span id="res-hi-score">0</span></p>
-            </div>
-            <div class="settings-box">
-                <p>【 攻撃ボタンの位置設定 】</p>
-                <div class="setting-row">
-                    <button id="btn-set-left" class="active">左側</button>
-                    <button id="btn-set-right">右側</button>
+            <div id="menu-content-wrapper">
+                <h1 class="screen-title">マルマインのゴロゴロ大作戦</h1>
+                
+                <div class="score-display-box">
+                    <p>HI-SCORE: <span id="res-hi-score">0</span></p>
                 </div>
-                <div class="menu-sub-btns">
+                
+                <div class="settings-box">
+                    <p>【 攻撃ボタンの位置設定 】</p>
+                    <div class="setting-row">
+                        <button id="btn-set-left" class="active">左側</button>
+                        <button id="btn-set-right">右側</button>
+                    </div>
+                </div>
+
+                <!-- 🟢 誤タップ防止：左右の端に完全に分離させたサブボタンエリア -->
+                <div class="menu-sub-btns-wide">
                     <button id="how-to-open-btn">📖 遊び方</button>
                     <button id="ranking-open-btn">🏆 ランキング</button>
                 </div>
+                
+                <button id="start-btn">START</button>
             </div>
-            <button id="start-btn">START</button>
         </div>
 
-        <!-- 🪟【最重要】ゲームオーバー画面専用の部屋（初期状態は非表示） -->
+        <!-- 🪟 ゲームオーバー画面専用の部屋（初期状態は非表示） -->
         <div id="gameover-menu" class="overlay-screen" style="display: none;">
             <h1 class="screen-title text-red">GAME OVER</h1>
             <div class="score-display-box">
