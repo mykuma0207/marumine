@@ -61,13 +61,16 @@ const u4 = "f" + "i" + "r" + "e" + "b" + "a" + "s" + "e" + "i" + "o" + "." + "c"
 const BASE_DB_URL = u1 + u2 + u3 + u4 + "/ranking.json";
 
 // ⚙️ 初期ロード
+// ⚙️ 初期ロード（バグ防御版）
 window.addEventListener('DOMContentLoaded', () => {
+    // 🟢 ゲーム開始前は、念のためゲーム中のプレイヤーや攻撃ボタンを一時的に非表示にしておく安全対策
+    player.style.display = 'none';
+    attackBtn.style.display = 'none';
+
     try {
         hiScore = parseInt(localStorage.getItem('marumine_hiscore')) || 0;
     } catch(e) { hiScore = 0; }
     
-    // 🎯【バグの全根絶】ネットへの自動接続の記述（loadGlobalRanking）をここから完全に削除しました！
-    // 起動時は100%端末内のスコアのみを即時表示するため、絶対に1コマもフリーズしなくなります。
     hudHiScoreDisplay.textContent = hiScore;
     resHiScore.textContent = hiScore; 
     
@@ -209,6 +212,7 @@ function initGame() {
     
     explosion.classList.remove('boom');
     player.style.display = 'block';
+    attackBtn.style.display = 'flex'; // 🟢 これを追加！ゲーム開始時に攻撃ボタンを表示させる
     
     player.style.animationDuration = '0.9s';
     player.style.animationPlayState = 'running';
