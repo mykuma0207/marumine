@@ -1,1 +1,348 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
+html, body {
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    background-color: #111;
+    position: fixed;
+    top: 0; left: 0;
+}
+
+body {
+    color: #fff;
+    font-family: sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#orientation-warning {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100dvh;
+    background: #222;
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+@media (orientation: landscape) {
+    #orientation-warning { display: none; }
+}
+
+#game-container {
+    width: 100vw;
+    height: 100dvh;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(#1a2a6c, #b21f1f, #fdbb2d);
+}
+
+#hud-container {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 24px;
+    font-weight: bold;
+    z-index: 15;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+}
+
+#score-wrap {
+    display: flex;
+    flex-direction: column;
+}
+#hud-hi-score-container {
+    font-size: 14px;
+    color: #ffcc00;
+    margin-top: 2px;
+}
+
+#life-container {
+    color: #ff3366;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#pause-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0;
+    z-index: 16;
+}
+
+#game-stage {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border-bottom: 20px solid #333;
+}
+
+#player {
+    width: 50px;
+    height: 50px;
+    background-image: url('marumine.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    position: absolute;
+    bottom: 0;
+    left: 22%;
+    z-index: 5;
+}
+
+.rolling {
+    animation: roll 0.8s linear infinite;
+}
+
+@keyframes roll {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.obstacle {
+    width: 30px;
+    height: 40px;
+    background-color: #ff3366;
+    border-radius: 4px;
+    position: absolute;
+    left: 100%;
+}
+.obs-all-wall {
+    background-color: #aa00ff !important;
+    box-shadow: 0 0 10px #aa00ff;
+}
+
+.obs-bottom { bottom: 0; }
+.obs-middle { bottom: 70px; }
+.obs-top    { bottom: 155px; }
+
+.elec-ball {
+    width: 25px;
+    height: 25px;
+    background: radial-gradient(circle, #fff 30%, #ffff00 80%);
+    border-radius: 50%;
+    position: absolute;
+    z-index: 6;
+    box-shadow: 0 0 15px #ffff00;
+}
+
+#explosion {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    font-size: 100px;
+    line-height: 140px;
+    text-align: center;
+    left: 22%;
+    bottom: -45px;
+    transform: translate(-45px, 0) scale(0);
+    z-index: 10;
+    pointer-events: none;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#explosion.boom {
+    transform: translate(-45px, -20px) scale(1);
+}
+
+#attack-btn {
+    position: absolute;
+    top: 95px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 230, 0, 0.7);
+    color: #111;
+    font-size: 10px;
+    font-weight: bold;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    z-index: 18;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    white-space: nowrap;
+}
+#attack-btn:active {
+    background: rgba(255, 255, 255, 0.9);
+    transform: scale(0.92);
+}
+
+.pos-top-left { left: 25px; right: auto; }
+.pos-top-right { right: 25px; left: auto; }
+
+/* 📱 ランキング・遊び方画面の背景マスク */
+.modal-mask {
+    position: absolute;
+    top: 0; left: 0; width: 100vw; height: 100dvh;
+    background: rgba(0,0,0,0.85);
+    z-index: 40;
+    display: none; 
+    justify-content: center;
+    align-items: flex-start; 
+}
+
+/* 🏆 ランキング画面のコンパクトサイズ調整 */
+.modal-content {
+    background: #222;
+    padding: 12px 20px; 
+    border-radius: 12px;
+    text-align: center;
+    border: 2px solid #ffcc00;
+    width: 75%; 
+    max-width: 340px; /* さらに少し小さくして見切れを徹底防御 */
+    margin-top: 4vh; 
+}
+.modal-content h2 { font-size: 15px; margin-bottom: 6px; color: #ffcc00; }
+.modal-inner-text { text-align: left; font-size: 12px; line-height: 1.4; margin-bottom: 10px; }
+.modal-inner-text p { margin-bottom: 6px; }
+
+.modal-close-btn {
+    padding: 4px 18px; font-size: 12px; background: #fff; color: #111; border: none; border-radius: 15px; font-weight: bold;
+}
+
+#ranking-list {
+    list-style: none;
+    text-align: left;
+    margin: 5px auto 10px;
+    width: 90%;
+    font-size: 13px; 
+    font-weight: bold;
+    line-height: 1.6; 
+}
+#ranking-list li {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px dashed #444;
+    padding: 1px 0;
+}
+#ranking-list li:nth-child(1) { color: #ffcc00; }
+#ranking-list li:nth-child(2) { color: #cccccc; }
+#ranking-list li:nth-child(3) { color: #cd7f32; }
+
+.invincible { animation: blink 0.1s linear infinite; }
+@keyframes blink {
+    0% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
+}
+
+/* 🪟 メニュー共通の画面設定（絶対座標による完全固定） */
+.overlay-screen {
+    position: absolute;
+    top: 0; left: 0; width: 100vw; height: 100dvh;
+    background: rgba(0,0,0,0.85);
+    z-index: 20;
+    text-align: center;
+    overflow: hidden;
+}
+
+.screen-title {
+    position: absolute;
+    top: 10%;
+    left: 0; width: 100%;
+    font-size: 26px;
+    letter-spacing: 1px;
+    color: #ffcc00;
+}
+.text-red { color: #ff3366 !important; }
+
+.score-display-box {
+    position: absolute;
+    top: 26%;
+    left: 0; width: 100%;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1.4;
+}
+#res-score { color: #fff; font-size: 20px; }
+.text-teal { color: #00ffcc !important; }
+#res-best-score { font-size: 20px; }
+#res-hi-score { color: #ffcc00; font-size: 22px; }
+
+/* 🛠️ トップ画面専用：攻撃ボタンの位置設定ボックス */
+.settings-box {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background: rgba(255,255,255,0.08);
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    width: 85%;
+    max-width: 380px;
+}
+.settings-box p { font-size: 11px; margin-bottom: 4px; color: #ccc; }
+
+/* 🛠️ ゲームオーバー画面専用：世界ランキング送信ボックス */
+#send-score-container {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 51, 102, 0.15);
+    border: 1px dashed #ff3366;
+    padding: 8px 15px;
+    border-radius: 8px;
+    text-align: center;
+    width: 85%;
+    max-width: 380px;
+}
+#send-score-container p { font-size: 11px; font-weight: bold; color: #ff3366; margin-bottom: 4px; }
+
+.input-row { display: flex; gap: 8px; justify-content: center; }
+#player-name-input {
+    padding: 4px 10px; font-size: 13px; border-radius: 4px; border: 1px solid #666; background: #333; color: #fff; width: 120px; text-align: center;
+    user-select: text !important; -webkit-user-select: text !important;
+}
+#send-score-btn {
+    padding: 4px 12px; font-size: 12px; font-weight: bold; background: #ff3366; color: #fff; border: none; border-radius: 4px; cursor: pointer;
+}
+
+.setting-row { margin-bottom: 4px; }
+.setting-row button {
+    padding: 3px 12px; margin: 0 3px; font-size: 11px; font-weight: bold;
+    background: #444; color: #fff; border: 2px solid #555; border-radius: 5px; cursor: pointer;
+}
+.setting-row button.active {
+    background: #ffcc00; color: #111; border-color: #fff;
+}
+.menu-sub-btns { display: flex; gap: 15px; justify-content: center; margin-top: 3px; }
+#how-to-open-btn, #ranking-open-btn {
+    background: none; border: none; color: #00ffcc; font-size: 12px; font-weight: bold; cursor: pointer; text-decoration: underline;
+}
+#ranking-open-btn { color: #ffcc00; }
+
+/* 決定版：絶対に埋もれない位置（下部固定）に計算されたメインボタン */
+#start-btn, #back-to-top-btn {
+    position: absolute;
+    bottom: 14%; /* 12%から14%に少し引き上げ、確実に収まる位置へ */
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 45px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 30px;
+    background-color: #fff;
+    color: #111;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
