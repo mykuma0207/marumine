@@ -32,8 +32,28 @@ body {
     font-weight: bold;
 }
 
+/* 🟢 【画面回転バグ完全防御】スマホを横向きにした瞬間に高さを強制リセットする設定 */
 @media (orientation: landscape) {
-    #orientation-warning { display: none; }
+    #orientation-warning { 
+        display: none; 
+    }
+
+    /* 横向き時のブラウザの高さバグを破壊し、100%正確な横画面の高さに固定する */
+    html, body, #game-container, .overlay-screen {
+        height: 100vh !important; /* dvhのバグをvhと!importantで強制上書き */
+    }
+
+    /* 縦幅の狭い横画面でも、タイトルや設定ボックス、STARTボタンが絶対に上下にはみ出さないよう自動縮小 */
+    #menu-content-wrapper {
+        gap: 6px !important;    /* 要素同士の間隔をキュッと詰める */
+        height: 95% !important;  /* 画面全体の95%以内に全てを収める */
+    }
+
+    /* タイトル文字のサイズも横画面用に少しだけコンパクトにして見切れを防御 */
+    .screen-title {
+        font-size: 22px !important;
+        margin-bottom: 2px !important;
+    }
 }
 
 #game-container {
